@@ -2,76 +2,72 @@
 """
 03_reconstruct_trajectory.py
 
-ROK2 궤적 분석 파이프라인 3단계:
-02_prepare_trajectory_csv.py에서 생성한 표준 CSV를 입력받아
-IMU + GPS 기반 궤적을 재구성하는 스크립트입니다.
+Trajectory analysis pipeline step 3.
+Read the prepared CSV files from 02_prepare_trajectory_csv.py and reconstruct
+the trajectory in one of three modes:
 
-입력:
-    output/trajectory_inputs_<log_id>/imu.csv
-    output/trajectory_inputs_<log_id>/gps.csv
-    output/trajectory_inputs_<log_id>/baro.csv   # 선택. 현재 계산에는 직접 사용하지 않음
+- gps-only:
+    Use GPS local coordinates directly for x/y/z.
+- gps-baro:
+    Use GPS local coordinates for x/y and BARO relative altitude for z.
+- imu-gps:
+    Keep the existing RK4 IMU integration with GPS position correction.
+    This mode is experimental.
 
-출력:
-    output/trajectory_<log_id>.csv
-    output/trajectory_<log_id>_gps_local.csv
-    output/trajectory_<log_id>_summary.md
+Inputs:
+    output/02_trajectory_inputs_<log_id>/imu.csv
+    output/02_trajectory_inputs_<log_id>/gps.csv
+    output/02_trajectory_inputs_<log_id>/baro.csv
 
-역할:
-    - GPS 위도/경도를 로컬 ENU 좌표로 변환
-    - IMU 가속도를 시간 보간
-    - RK4 적분으로 위치/속도 예측
-    - GPS 관측 시점마다 위치 보정
-    - 재구성된 궤적 CSV 저장
+Outputs:
+    output/03_trajectory_<log_id>/trajectory.csv
+    output/03_trajectory_<log_id>/gps_local.csv
+    output/03_trajectory_<log_id>/reconstruct_summary.md
 
-주의:
-    - 이 스크립트는 플롯을 생성하지 않습니다.
-    - 플롯은 04_plot_trajectory.py에서 수행합니다.
-    - 현재 IMU 가속도 ax/ay/az는 이미 earth-frame 계열이라고 가정합니다.
-    - ArduPilot IMU AccX/AccY/AccZ가 body-frame이면, ATT/XKQ 기반 회전 변환을
-      먼저 적용해야 정밀 궤적이 됩니다.
-    - 따라서 현재 결과는 정밀 항법 결과가 아니라 파이프라인 검증 및
-      sanity check용 궤적입니다.
+Notes:
+    - The default recommended mode is gps-baro.
+    - 04_plot_trajectory.py reads the generated trajectory.csv directly.
+    - Raw ArduPilot IMU AccX/AccY/AccZ are likely body-frame values, so
+      imu-gps must not be treated as a precision trajectory estimator unless
+      attitude rotation is added first.
 """
 
 # =====================================================================
-# 실행 방법
+# Usage examples
 # ---------------------------------------------------------------------
-# 기본 실행:
+# Recommended default:
 #
 #   python scripts/03_reconstruct_trajectory.py \
-#     --imu output/trajectory_inputs_00000197/imu.csv \
-#     --gps output/trajectory_inputs_00000197/gps.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv \
-#     --out output/trajectory_00000197.csv
+#     --mode gps-baro \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv \
+#     --gps output/02_trajectory_inputs_00000197/gps.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --out output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local-out output/03_trajectory_00000197/gps_local.csv \
+#     --summary-out output/03_trajectory_00000197/reconstruct_summary.md
 #
-# BARO 없이 실행:
-#
-#   python scripts/03_reconstruct_trajectory.py \
-#     --imu output/trajectory_inputs_00000197/imu.csv \
-#     --gps output/trajectory_inputs_00000197/gps.csv \
-#     --out output/trajectory_00000197.csv
-#
-# GPS 보정 강도 변경:
+# GPS-only:
 #
 #   python scripts/03_reconstruct_trajectory.py \
-#     --imu output/trajectory_inputs_00000197/imu.csv \
-#     --gps output/trajectory_inputs_00000197/gps.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv \
-#     --gps-blend 0.8 \
-#     --out output/trajectory_00000197.csv
+#     --mode gps-only \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv \
+#     --gps output/02_trajectory_inputs_00000197/gps.csv \
+#     --out output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local-out output/03_trajectory_00000197/gps_local.csv \
+#     --summary-out output/03_trajectory_00000197/reconstruct_summary.md
 #
-# 출력:
+# IMU-GPS experimental:
 #
-#   output/trajectory_00000197.csv
-#   output/trajectory_00000197_gps_local.csv
-#   output/trajectory_00000197_summary.md
-#
-# 후속 실행:
-#
-#   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv \
-#     --gps-local output/trajectory_00000197_gps_local.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv
+#   python scripts/03_reconstruct_trajectory.py \
+#     --mode imu-gps \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv \
+#     --gps output/02_trajectory_inputs_00000197/gps.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --dt 0.02 \
+#     --gps-blend 1.0 \
+#     --out output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local-out output/03_trajectory_00000197/gps_local.csv \
+#     --summary-out output/03_trajectory_00000197/reconstruct_summary.md
 # =====================================================================
 
 from __future__ import annotations
@@ -86,57 +82,149 @@ import pandas as pd
 
 
 EARTH_RADIUS_M = 6378137.0
+TRAJECTORY_BASE_COLUMNS = ["time_s", "x", "y", "z", "vx", "vy", "vz", "lat", "lng"]
+TRAJECTORY_METADATA_COLUMNS = ["source_mode", "alt_source"]
+MODE_CHOICES = ("gps-only", "gps-baro", "imu-gps")
+EXPERIMENTAL_WARNING = (
+    "WARNING: imu-gps mode assumes IMU acceleration is already expressed in an "
+    "earth-fixed frame. Raw ArduPilot IMU AccX/AccY/AccZ are likely body-frame, "
+    "so this mode is experimental and not valid for precision trajectory "
+    "estimation without attitude rotation."
+)
 
 
 # =====================================================================
-# [1] 공통 유틸
+# [1] Common utilities
 # =====================================================================
 
 def require_columns(df: pd.DataFrame, required: set[str], name: str) -> None:
     """
-    DataFrame에 필요한 컬럼이 있는지 검사한다.
+    Validate that required columns exist in the DataFrame.
     """
     missing = required - set(df.columns)
 
     if missing:
         raise ValueError(
-            f"{name} CSV에 필요한 컬럼이 없습니다: {sorted(missing)}\n"
-            f"실제 컬럼: {list(df.columns)}"
+            f"{name} CSV is missing required columns: {sorted(missing)}\n"
+            f"Actual columns: {list(df.columns)}"
         )
 
 
 def validate_file(path: Path, name: str) -> None:
     """
-    입력 파일 존재 여부를 검사한다.
+    Validate that an input file exists and is a regular file.
     """
     if not path.exists():
-        raise FileNotFoundError(f"{name} 파일을 찾을 수 없습니다: {path}")
+        raise FileNotFoundError(f"{name} file not found: {path}")
 
     if not path.is_file():
-        raise ValueError(f"{name} 경로가 파일이 아닙니다: {path}")
+        raise ValueError(f"{name} path is not a file: {path}")
 
 
 def clamp(value: float, min_value: float, max_value: float) -> float:
     """
-    값을 지정 범위 안으로 제한한다.
+    Clamp a value to the given range.
     """
     return max(min_value, min(max_value, value))
 
 
-# =====================================================================
-# [2] CSV 로딩
-# =====================================================================
-
-def load_prepared_imu_csv(path: Path) -> pd.DataFrame:
+def describe_path(path: Path | None) -> str:
     """
-    02_prepare_trajectory_csv.py가 생성한 imu.csv를 읽는다.
+    Render a path for summary output.
+    """
+    return str(path) if path is not None else "N/A"
 
-    필요 컬럼:
+
+def validate_time_axis(time_s: np.ndarray, name: str) -> None:
+    """
+    Validate that time values are finite and strictly increasing.
+    """
+    if len(time_s) < 2:
+        raise ValueError(f"{name} requires at least 2 time samples.")
+
+    if not np.isfinite(time_s).all():
+        raise ValueError(f"{name} contains non-finite time values.")
+
+    dt = np.diff(time_s)
+
+    if np.any(dt <= 0):
+        raise ValueError(
+            f"{name} time_s must be strictly increasing after preprocessing."
+        )
+
+
+def safe_gradient(values: np.ndarray, time_s: np.ndarray, name: str) -> np.ndarray:
+    """
+    Compute d(values)/d(time) with validation for irregular time steps.
+    """
+    values = np.asarray(values, dtype=float)
+    time_s = np.asarray(time_s, dtype=float)
+
+    if len(values) != len(time_s):
+        raise ValueError(
+            f"{name} gradient length mismatch: values={len(values)}, time={len(time_s)}"
+        )
+
+    if not np.isfinite(values).all():
+        raise ValueError(f"{name} contains non-finite values.")
+
+    validate_time_axis(time_s, name=f"{name} gradient")
+
+    edge_order = 1 if len(values) < 3 else 2
+
+    return np.gradient(values, time_s, edge_order=edge_order)
+
+
+def build_gradient_velocity(
+    time_s: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Estimate vx/vy/vz from position time series.
+    """
+    vx = safe_gradient(x, time_s, name="x")
+    vy = safe_gradient(y, time_s, name="y")
+    vz = safe_gradient(z, time_s, name="z")
+
+    return vx, vy, vz
+
+
+def apply_trajectory_metadata(
+    trajectory_df: pd.DataFrame,
+    source_mode: str,
+    alt_source: str,
+) -> pd.DataFrame:
+    """
+    Attach metadata columns while keeping the expected column order.
+    """
+    out = trajectory_df.copy()
+    out["source_mode"] = source_mode
+    out["alt_source"] = alt_source
+
+    return out[TRAJECTORY_BASE_COLUMNS + TRAJECTORY_METADATA_COLUMNS]
+
+
+# =====================================================================
+# [2] CSV loading
+# =====================================================================
+
+def load_prepared_imu_csv(path: Path | None) -> pd.DataFrame | None:
+    """
+    Read imu.csv generated by 02_prepare_trajectory_csv.py.
+
+    Required columns:
         time_s, ax, ay, az
 
-    선택 컬럼:
+    Optional columns:
         gx, gy, gz
     """
+    if path is None:
+        return None
+
+    validate_file(path, "IMU")
+
     df = pd.read_csv(path)
 
     require_columns(df, {"time_s", "ax", "ay", "az"}, "IMU")
@@ -153,21 +241,23 @@ def load_prepared_imu_csv(path: Path) -> pd.DataFrame:
     df = df.reset_index(drop=True)
 
     if len(df) < 2:
-        raise ValueError("IMU 데이터가 너무 적습니다. 최소 2개 이상 필요합니다.")
+        raise ValueError("IMU data is too short. At least 2 rows are required.")
 
     return df
 
 
 def load_prepared_gps_csv(path: Path) -> pd.DataFrame:
     """
-    02_prepare_trajectory_csv.py가 생성한 gps.csv를 읽는다.
+    Read gps.csv generated by 02_prepare_trajectory_csv.py.
 
-    필요 컬럼:
+    Required columns:
         time_s, lat, lng, alt
 
-    선택 컬럼:
+    Optional columns:
         spd, vz, nsats, hdop, status
     """
+    validate_file(path, "GPS")
+
     df = pd.read_csv(path)
 
     require_columns(df, {"time_s", "lat", "lng", "alt"}, "GPS")
@@ -183,21 +273,25 @@ def load_prepared_gps_csv(path: Path) -> pd.DataFrame:
     df = df.drop_duplicates(subset="time_s", keep="last")
     df = df.reset_index(drop=True)
 
-    if len(df) < 1:
-        raise ValueError("GPS 데이터가 비어 있습니다.")
+    if len(df) < 2:
+        raise ValueError(
+            "GPS data is too short. At least 2 rows are required for reconstruction."
+        )
 
     return df
 
 
 def load_prepared_baro_csv(path: Path | None) -> pd.DataFrame | None:
     """
-    02_prepare_trajectory_csv.py가 생성한 baro.csv를 읽는다.
+    Read baro.csv generated by 02_prepare_trajectory_csv.py.
 
-    현재 03번 계산에는 직접 사용하지 않고, summary에 시간 범위만 기록한다.
-    실제 고도 비교 플롯은 04_plot_trajectory.py에서 수행한다.
+    Required columns:
+        time_s, baro_alt
     """
     if path is None:
         return None
+
+    validate_file(path, "BARO")
 
     df = pd.read_csv(path)
 
@@ -208,13 +302,13 @@ def load_prepared_baro_csv(path: Path | None) -> pd.DataFrame | None:
     df = df.reset_index(drop=True)
 
     if len(df) < 1:
-        raise ValueError("BARO 데이터가 비어 있습니다.")
+        raise ValueError("BARO data is empty.")
 
     return df
 
 
 # =====================================================================
-# [3] 좌표 변환
+# [3] Coordinate conversion
 # =====================================================================
 
 def latlng_to_local_xy(
@@ -224,9 +318,9 @@ def latlng_to_local_xy(
     lng0: float,
 ) -> tuple[float, float]:
     """
-    위도/경도를 기준점 기준 로컬 ENU 평면좌표로 변환한다.
+    Convert latitude/longitude to local ENU planar coordinates.
 
-    반환:
+    Returns:
         x = East [m]
         y = North [m]
     """
@@ -248,7 +342,7 @@ def local_xy_to_latlng(
     lng0: float,
 ) -> tuple[float, float]:
     """
-    로컬 ENU 평면좌표를 다시 위도/경도로 변환한다.
+    Convert local ENU planar coordinates back to latitude/longitude.
     """
     lat0_rad = math.radians(lat0)
 
@@ -263,12 +357,7 @@ def local_xy_to_latlng(
 
 def add_gps_local_coordinates(gps_df: pd.DataFrame) -> pd.DataFrame:
     """
-    GPS 위경도/고도를 첫 GPS 샘플 기준 로컬 ENU 좌표로 변환한다.
-
-    추가 컬럼:
-        gx = East [m]
-        gy = North [m]
-        gz = Up [m], 첫 GPS 고도 기준 상대고도
+    Add gx/gy/gz local coordinates using the first GPS sample as the origin.
     """
     gps_local = gps_df.copy()
 
@@ -294,18 +383,123 @@ def add_gps_local_coordinates(gps_df: pd.DataFrame) -> pd.DataFrame:
 
 
 # =====================================================================
-# [4] IMU 보간 / RK4 적분
+# [4] GPS/BARO trajectory modes
+# =====================================================================
+
+def build_gps_referenced_trajectory(
+    gps_local_df: pd.DataFrame,
+    z_values: np.ndarray,
+    source_mode: str,
+    alt_source: str,
+) -> pd.DataFrame:
+    """
+    Build a trajectory DataFrame from GPS-referenced local coordinates.
+    """
+    time_s = gps_local_df["time_s"].to_numpy(dtype=float)
+    x = gps_local_df["gx"].to_numpy(dtype=float)
+    y = gps_local_df["gy"].to_numpy(dtype=float)
+    z = np.asarray(z_values, dtype=float)
+
+    if len(z) != len(time_s):
+        raise ValueError(
+            f"z length mismatch for {source_mode}: z={len(z)}, time_s={len(time_s)}"
+        )
+
+    vx, vy, vz = build_gradient_velocity(time_s=time_s, x=x, y=y, z=z)
+
+    trajectory_df = pd.DataFrame(
+        {
+            "time_s": time_s,
+            "x": x,
+            "y": y,
+            "z": z,
+            "vx": vx,
+            "vy": vy,
+            "vz": vz,
+            "lat": gps_local_df["lat"].astype(float).to_numpy(),
+            "lng": gps_local_df["lng"].astype(float).to_numpy(),
+        }
+    )
+
+    return apply_trajectory_metadata(
+        trajectory_df=trajectory_df,
+        source_mode=source_mode,
+        alt_source=alt_source,
+    )
+
+
+def reconstruct_trajectory_gps_only(
+    gps_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Reconstruct the trajectory directly from GPS local coordinates.
+    """
+    gps_local_df = add_gps_local_coordinates(gps_df)
+
+    trajectory_df = build_gps_referenced_trajectory(
+        gps_local_df=gps_local_df,
+        z_values=gps_local_df["gz"].to_numpy(dtype=float),
+        source_mode="gps-only",
+        alt_source="gps_relative_alt",
+    )
+
+    trajectory_df.attrs["mode"] = "gps-only"
+    trajectory_df.attrs["altitude_source_description"] = "GPS relative altitude"
+    trajectory_df.attrs["gps_correction_count"] = "not used"
+    trajectory_df.attrs["baro_interp_range"] = "not used"
+
+    return trajectory_df, gps_local_df
+
+
+def reconstruct_trajectory_gps_baro(
+    gps_df: pd.DataFrame,
+    baro_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Reconstruct the trajectory from GPS horizontal position and BARO altitude.
+    """
+    gps_local_df = add_gps_local_coordinates(gps_df)
+
+    baro_time_s = baro_df["time_s"].to_numpy(dtype=float)
+    validate_time_axis(baro_time_s, name="BARO interpolation")
+
+    baro_rel_alt = (
+        baro_df["baro_alt"].astype(float).to_numpy()
+        - float(baro_df["baro_alt"].iloc[0])
+    )
+    gps_time_s = gps_local_df["time_s"].to_numpy(dtype=float)
+
+    z_interp = np.interp(gps_time_s, baro_time_s, baro_rel_alt)
+
+    trajectory_df = build_gps_referenced_trajectory(
+        gps_local_df=gps_local_df,
+        z_values=z_interp,
+        source_mode="gps-baro",
+        alt_source="baro_interp",
+    )
+
+    trajectory_df.attrs["mode"] = "gps-baro"
+    trajectory_df.attrs["altitude_source_description"] = (
+        "BARO relative altitude interpolated to GPS timestamps"
+    )
+    trajectory_df.attrs["gps_correction_count"] = "not used"
+    trajectory_df.attrs["baro_interp_range"] = (
+        f"{baro_time_s[0]:.6f} ~ {baro_time_s[-1]:.6f} s"
+    )
+    trajectory_df.attrs["baro_edge_hold_used"] = bool(
+        gps_time_s[0] < baro_time_s[0] or gps_time_s[-1] > baro_time_s[-1]
+    )
+
+    return trajectory_df, gps_local_df
+
+
+# =====================================================================
+# [5] IMU interpolation / RK4 integration
 # =====================================================================
 
 def get_accel_at(t: float, imu_df: pd.DataFrame) -> np.ndarray:
     """
-    임의 시각 t에서 IMU 가속도를 선형보간으로 얻는다.
-
-    입력:
-        imu_df columns = time_s, ax, ay, az
-
-    반환:
-        np.array([ax, ay, az])
+    Linearly interpolate IMU acceleration at time t.
     """
     ax = np.interp(t, imu_df["time_s"], imu_df["ax"])
     ay = np.interp(t, imu_df["time_s"], imu_df["ay"])
@@ -322,23 +516,11 @@ def rk4_step(
     gravity: np.ndarray,
 ) -> np.ndarray:
     """
-    RK4로 상태를 한 스텝 적분한다.
-
-    state:
-        [x, y, z, vx, vy, vz]
-
-    모델:
-        d(position) / dt = velocity
-        d(velocity) / dt = measured_acceleration - gravity
-
-    주의:
-        measured_acceleration이 earth-frame 기준이라는 단순 가정이다.
-        body-frame raw IMU를 그대로 넣으면 결과가 물리적으로 틀어질 수 있다.
+    Advance the 6D state [x, y, z, vx, vy, vz] using RK4.
     """
 
     def derivative(s: np.ndarray, time: float) -> np.ndarray:
         velocity = s[3:6]
-
         acc_measured = get_accel_at(time, imu_df)
         acc_true = acc_measured - gravity
 
@@ -358,12 +540,7 @@ def correct_position_with_gps(
     blend: float,
 ) -> np.ndarray:
     """
-    GPS 관측 위치로 상태벡터의 위치 성분만 보정한다.
-
-    blend:
-        1.0 = GPS 위치로 완전 스냅
-        0.0 = GPS 보정 사용 안 함
-        0.0~1.0 = 기존 추정치와 GPS 관측치 가중평균
+    Correct only the position terms of the state vector with GPS.
     """
     blend = clamp(blend, 0.0, 1.0)
 
@@ -373,11 +550,7 @@ def correct_position_with_gps(
     return corrected
 
 
-# =====================================================================
-# [5] 궤적 재구성
-# =====================================================================
-
-def reconstruct_trajectory(
+def reconstruct_trajectory_imu_gps(
     imu_df: pd.DataFrame,
     gps_df: pd.DataFrame,
     dt: float = 0.02,
@@ -385,39 +558,31 @@ def reconstruct_trajectory(
     gps_blend: float = 1.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    IMU 예측 + GPS 위치 보정 방식으로 궤적을 재구성한다.
-
-    반환:
-        trajectory_df:
-            time_s, x, y, z, vx, vy, vz, lat, lng
-
-        gps_local_df:
-            gps.csv에 gx, gy, gz를 추가한 DataFrame
+    Keep the existing RK4 IMU integration with GPS position correction.
     """
     if dt <= 0:
-        raise ValueError("dt는 0보다 커야 합니다.")
+        raise ValueError("dt must be greater than 0.")
 
     gps_blend = clamp(gps_blend, 0.0, 1.0)
+    gps_local_df = add_gps_local_coordinates(gps_df)
 
-    gps_local = add_gps_local_coordinates(gps_df)
+    lat0 = float(gps_local_df["lat"].iloc[0])
+    lng0 = float(gps_local_df["lng"].iloc[0])
 
-    lat0 = float(gps_local["lat"].iloc[0])
-    lng0 = float(gps_local["lng"].iloc[0])
-
-    t_start = float(gps_local["time_s"].iloc[0])
+    t_start = float(gps_local_df["time_s"].iloc[0])
     t_end = float(imu_df["time_s"].iloc[-1])
 
     if t_end <= t_start:
         raise ValueError(
-            f"시간 범위가 이상합니다. "
+            f"Invalid time range for imu-gps reconstruction: "
             f"GPS start={t_start:.6f}, IMU end={t_end:.6f}"
         )
 
     state = np.array(
         [
-            float(gps_local["gx"].iloc[0]),
-            float(gps_local["gy"].iloc[0]),
-            float(gps_local["gz"].iloc[0]),
+            float(gps_local_df["gx"].iloc[0]),
+            float(gps_local_df["gy"].iloc[0]),
+            float(gps_local_df["gz"].iloc[0]),
             0.0,
             0.0,
             0.0,
@@ -447,8 +612,11 @@ def reconstruct_trajectory(
 
         t += step
 
-        while gps_idx < len(gps_local) and float(gps_local["time_s"].iloc[gps_idx]) <= t:
-            gps_row = gps_local.iloc[gps_idx]
+        while (
+            gps_idx < len(gps_local_df)
+            and float(gps_local_df["time_s"].iloc[gps_idx]) <= t
+        ):
+            gps_row = gps_local_df.iloc[gps_idx]
             gps_xyz = np.array(
                 [
                     float(gps_row["gx"]),
@@ -497,23 +665,55 @@ def reconstruct_trajectory(
     trajectory_df["lat"] = [point[0] for point in latlng]
     trajectory_df["lng"] = [point[1] for point in latlng]
 
+    trajectory_df = apply_trajectory_metadata(
+        trajectory_df=trajectory_df,
+        source_mode="imu-gps",
+        alt_source="imu_rk4_gps_correction_experimental",
+    )
+
+    trajectory_df.attrs["mode"] = "imu-gps"
+    trajectory_df.attrs["altitude_source_description"] = (
+        "IMU RK4 integration with GPS correction, experimental"
+    )
     trajectory_df.attrs["gps_correction_count"] = correction_count
+    trajectory_df.attrs["baro_interp_range"] = "not used"
+    trajectory_df.attrs["warning"] = EXPERIMENTAL_WARNING
 
-    return trajectory_df, gps_local
+    return trajectory_df, gps_local_df
 
 
 # =====================================================================
-# [6] 요약 파일 작성
+# [6] Summary writer
 # =====================================================================
+
+def format_used_flag(mode: str, value: object, unit: str = "") -> str:
+    """
+    Format a parameter line with whether it was used by the selected mode.
+    """
+    suffix = f" {unit}" if unit else ""
+
+    if mode == "imu-gps":
+        return f"`{value}`{suffix} (used)"
+
+    return f"`{value}`{suffix} (not used)"
+
+
+def format_range(series: pd.Series) -> str:
+    """
+    Format min/max range text.
+    """
+    return f"{float(series.min()):.3f} ~ {float(series.max()):.3f}"
+
 
 def write_reconstruct_summary(
     summary_path: Path,
-    imu_path: Path,
+    mode: str,
+    imu_path: Path | None,
     gps_path: Path,
     baro_path: Path | None,
     out_path: Path,
     gps_local_path: Path,
-    imu_df: pd.DataFrame,
+    imu_df: pd.DataFrame | None,
     gps_df: pd.DataFrame,
     gps_local_df: pd.DataFrame,
     baro_df: pd.DataFrame | None,
@@ -523,39 +723,80 @@ def write_reconstruct_summary(
     gps_blend: float,
 ) -> None:
     """
-    궤적 재구성 결과 요약 Markdown 파일을 작성한다.
+    Write a Markdown summary of the reconstruction result.
     """
+    altitude_source = trajectory_df.attrs.get("altitude_source_description", "N/A")
     correction_count = trajectory_df.attrs.get("gps_correction_count", "N/A")
+    baro_interp_range = trajectory_df.attrs.get("baro_interp_range", "N/A")
+    warnings: list[str] = []
+
+    if mode == "imu-gps":
+        warnings.append(str(trajectory_df.attrs.get("warning", EXPERIMENTAL_WARNING)))
+        warnings.append("future work: attitude rotation required")
+    else:
+        warnings.append(
+            "This result is intended as a conservative GPS/BARO-based sanity-check "
+            "trajectory rather than a precision inertial solution."
+        )
+
+    if mode == "gps-baro" and trajectory_df.attrs.get("baro_edge_hold_used", False):
+        warnings.append(
+            "GPS timestamps extend outside the BARO time range. np.interp edge "
+            "values were held constant at the ends."
+        )
 
     lines: list[str] = [
         "# Trajectory Reconstruction Summary",
         "",
-        "## Inputs",
+        "## Mode",
         "",
-        f"- IMU CSV: `{imu_path}`",
+        f"- mode: `{mode}`",
+        "",
+        "## Input files",
+        "",
+        f"- IMU CSV: `{describe_path(imu_path)}`",
         f"- GPS CSV: `{gps_path}`",
-        f"- BARO CSV: `{baro_path if baro_path is not None else 'N/A'}`",
+        f"- BARO CSV: `{describe_path(baro_path)}`",
         "",
-        "## Outputs",
+        "## Output files",
         "",
         f"- Trajectory CSV: `{out_path}`",
         f"- GPS local CSV: `{gps_local_path}`",
+        f"- Summary Markdown: `{summary_path}`",
         "",
         "## Parameters",
         "",
-        f"- dt: `{dt}` s",
-        f"- gravity_z: `{gravity_z}` m/s^2",
-        f"- gps_blend: `{gps_blend}`",
+        f"- dt: {format_used_flag(mode, dt, 's')}",
+        f"- gravity_z: {format_used_flag(mode, gravity_z, 'm/s^2')}",
+        f"- gps_blend: {format_used_flag(mode, gps_blend)}",
         "",
         "## Input ranges",
         "",
-        f"- IMU rows: `{len(imu_df)}`",
-        f"- IMU time: `{imu_df['time_s'].iloc[0]:.6f}` ~ "
-        f"`{imu_df['time_s'].iloc[-1]:.6f}` s",
-        f"- GPS rows: `{len(gps_df)}`",
-        f"- GPS time: `{gps_df['time_s'].iloc[0]:.6f}` ~ "
-        f"`{gps_df['time_s'].iloc[-1]:.6f}` s",
     ]
+
+    if imu_df is not None:
+        lines.extend(
+            [
+                f"- IMU rows: `{len(imu_df)}`",
+                f"- IMU time: `{imu_df['time_s'].iloc[0]:.6f}` ~ "
+                f"`{imu_df['time_s'].iloc[-1]:.6f}` s",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "- IMU rows: `N/A`",
+                "- IMU time: `N/A`",
+            ]
+        )
+
+    lines.extend(
+        [
+            f"- GPS rows: `{len(gps_df)}`",
+            f"- GPS time: `{gps_df['time_s'].iloc[0]:.6f}` ~ "
+            f"`{gps_df['time_s'].iloc[-1]:.6f}` s",
+        ]
+    )
 
     if baro_df is not None:
         lines.extend(
@@ -566,27 +807,31 @@ def write_reconstruct_summary(
             ]
         )
     else:
-        lines.append("- BARO rows: `N/A`")
+        lines.extend(
+            [
+                "- BARO rows: `N/A`",
+                "- BARO time: `N/A`",
+            ]
+        )
 
     lines.extend(
         [
+            f"- BARO interpolation range: `{baro_interp_range}`",
             "",
             "## Reconstruction result",
             "",
             f"- Trajectory rows: `{len(trajectory_df)}`",
             f"- Trajectory time: `{trajectory_df['time_s'].iloc[0]:.6f}` ~ "
             f"`{trajectory_df['time_s'].iloc[-1]:.6f}` s",
-            f"- GPS correction count: `{correction_count}`",
-            f"- Start lat/lng: "
-            f"`{trajectory_df['lat'].iloc[0]:.8f}`, "
-            f"`{trajectory_df['lng'].iloc[0]:.8f}`",
-            f"- End lat/lng: "
-            f"`{trajectory_df['lat'].iloc[-1]:.8f}`, "
-            f"`{trajectory_df['lng'].iloc[-1]:.8f}`",
             f"- Final local position x/y/z: "
             f"`{trajectory_df['x'].iloc[-1]:.3f}`, "
             f"`{trajectory_df['y'].iloc[-1]:.3f}`, "
             f"`{trajectory_df['z'].iloc[-1]:.3f}` m",
+            f"- GPS local x range: `{format_range(gps_local_df['gx'])}` m",
+            f"- GPS local y range: `{format_range(gps_local_df['gy'])}` m",
+            f"- GPS local z range: `{format_range(gps_local_df['gz'])}` m",
+            f"- Altitude source: `{altitude_source}`",
+            f"- GPS correction count: `{correction_count}`",
             "",
             "## Columns",
             "",
@@ -602,24 +847,26 @@ def write_reconstruct_summary(
             ", ".join(gps_local_df.columns),
             "```",
             "",
-            "## Important limitation",
-            "",
-            "- This reconstruction assumes IMU acceleration is already expressed in an "
-            "earth-fixed frame. If AccX/AccY/AccZ are body-frame raw IMU values, "
-            "attitude-based rotation using ATT/XKQ is required before precision use.",
+            "## Limitation / Warning",
             "",
         ]
     )
+
+    for warning in warnings:
+        lines.append(f"- {warning}")
+
+    lines.append("")
 
     summary_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 # =====================================================================
-# [7] 메인 처리
+# [7] Main pipeline
 # =====================================================================
 
 def reconstruct_from_csv(
-    imu_path: Path,
+    mode: str,
+    imu_path: Path | None,
     gps_path: Path,
     baro_path: Path | None,
     out_path: Path,
@@ -630,32 +877,49 @@ def reconstruct_from_csv(
     summary_out: Path | None,
 ) -> int:
     """
-    전체 궤적 재구성 파이프라인 실행.
+    Execute the full reconstruction pipeline.
     """
-    validate_file(imu_path, "IMU")
-    validate_file(gps_path, "GPS")
+    if mode not in MODE_CHOICES:
+        raise ValueError(f"Unsupported mode: {mode}")
 
-    if baro_path is not None:
-        validate_file(baro_path, "BARO")
+    if mode == "imu-gps" and imu_path is None:
+        raise ValueError("imu-gps mode requires --imu.")
 
-    print(f"[1/5] Loading IMU: {imu_path}")
-    imu_df = load_prepared_imu_csv(imu_path)
-    print(
-        f"      -> {len(imu_df)} rows, "
-        f"{imu_df['time_s'].iloc[0]:.3f}s ~ {imu_df['time_s'].iloc[-1]:.3f}s"
-    )
+    if mode == "gps-baro" and baro_path is None:
+        raise ValueError("gps-baro mode requires --baro.")
 
-    print(f"[2/5] Loading GPS: {gps_path}")
+    print(f"[MODE] Reconstruction mode: {mode}")
+
+    if mode != "imu-gps":
+        print(
+            "[INFO] --dt, --gravity, and --gps-blend are accepted for CLI "
+            f"compatibility but not used in mode={mode}."
+        )
+
+    print(f"[LOAD] GPS: {gps_path}")
     gps_df = load_prepared_gps_csv(gps_path)
     print(
         f"      -> {len(gps_df)} rows, "
         f"{gps_df['time_s'].iloc[0]:.3f}s ~ {gps_df['time_s'].iloc[-1]:.3f}s"
     )
 
+    imu_df = None
+
+    if imu_path is not None:
+        print(f"[LOAD] IMU: {imu_path}")
+        imu_df = load_prepared_imu_csv(imu_path)
+        assert imu_df is not None
+        print(
+            f"      -> {len(imu_df)} rows, "
+            f"{imu_df['time_s'].iloc[0]:.3f}s ~ {imu_df['time_s'].iloc[-1]:.3f}s"
+        )
+    else:
+        print("[LOAD] IMU: skipped")
+
     baro_df = None
 
     if baro_path is not None:
-        print(f"[3/5] Loading BARO: {baro_path}")
+        print(f"[LOAD] BARO: {baro_path}")
         baro_df = load_prepared_baro_csv(baro_path)
         assert baro_df is not None
         print(
@@ -663,16 +927,33 @@ def reconstruct_from_csv(
             f"{baro_df['time_s'].iloc[0]:.3f}s ~ {baro_df['time_s'].iloc[-1]:.3f}s"
         )
     else:
-        print("[3/5] Loading BARO: skipped")
+        print("[LOAD] BARO: skipped")
 
-    print(f"[4/5] Reconstructing trajectory: dt={dt}, gps_blend={gps_blend}")
-    trajectory_df, gps_local_df = reconstruct_trajectory(
-        imu_df=imu_df,
-        gps_df=gps_df,
-        dt=dt,
-        gravity_z=gravity_z,
-        gps_blend=gps_blend,
-    )
+    print("[RUN] Reconstructing trajectory...")
+
+    if mode == "gps-only":
+        trajectory_df, gps_local_df = reconstruct_trajectory_gps_only(gps_df=gps_df)
+    elif mode == "gps-baro":
+        if baro_df is None:
+            raise ValueError("gps-baro mode requires baro.csv.")
+
+        trajectory_df, gps_local_df = reconstruct_trajectory_gps_baro(
+            gps_df=gps_df,
+            baro_df=baro_df,
+        )
+    else:
+        if imu_df is None:
+            raise ValueError("imu-gps mode requires imu.csv.")
+
+        print(f"[WARNING] {EXPERIMENTAL_WARNING}")
+
+        trajectory_df, gps_local_df = reconstruct_trajectory_imu_gps(
+            imu_df=imu_df,
+            gps_df=gps_df,
+            dt=dt,
+            gravity_z=gravity_z,
+            gps_blend=gps_blend,
+        )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     trajectory_df.to_csv(out_path, index=False)
@@ -688,6 +969,7 @@ def reconstruct_from_csv(
 
     write_reconstruct_summary(
         summary_path=summary_out,
+        mode=mode,
         imu_path=imu_path,
         gps_path=gps_path,
         baro_path=baro_path,
@@ -703,26 +985,45 @@ def reconstruct_from_csv(
         gps_blend=gps_blend,
     )
 
-    print("[5/5] Saving outputs")
+    print("[SAVE] Outputs written")
     print(f"      -> trajectory: {out_path}")
     print(f"      -> gps_local : {gps_local_out}")
     print(f"      -> summary   : {summary_out}")
-
     print("[DONE] Trajectory reconstruction completed.")
 
     return 0
 
 
+# =====================================================================
+# [8] CLI
+# =====================================================================
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Reconstruct ROK2 trajectory from prepared IMU/GPS/BARO CSV files."
+        description="Reconstruct trajectory from prepared IMU/GPS/BARO CSV files."
+    )
+
+    parser.add_argument(
+        "--mode",
+        choices=MODE_CHOICES,
+        default="gps-baro",
+        help=(
+            "Reconstruction mode. "
+            "gps-only = GPS local x/y/z, "
+            "gps-baro = GPS local x/y + BARO relative z, "
+            "imu-gps = RK4 IMU integration + GPS correction. "
+            "Default: gps-baro."
+        ),
     )
 
     parser.add_argument(
         "--imu",
         type=Path,
-        required=True,
-        help="Path to prepared imu.csv from 02_prepare_trajectory_csv.py.",
+        default=None,
+        help=(
+            "Path to prepared imu.csv from 02_prepare_trajectory_csv.py. "
+            "Required for mode=imu-gps. Accepted but not used by gps-only/gps-baro."
+        ),
     )
 
     parser.add_argument(
@@ -736,7 +1037,10 @@ def parse_args() -> argparse.Namespace:
         "--baro",
         type=Path,
         default=None,
-        help="Optional path to prepared baro.csv from 02_prepare_trajectory_csv.py.",
+        help=(
+            "Path to prepared baro.csv from 02_prepare_trajectory_csv.py. "
+            "Required for mode=gps-baro."
+        ),
     )
 
     parser.add_argument(
@@ -770,21 +1074,24 @@ def parse_args() -> argparse.Namespace:
         "--dt",
         type=float,
         default=0.02,
-        help="RK4 integration step in seconds. Default: 0.02.",
+        help="RK4 integration step in seconds. Used only by mode=imu-gps.",
     )
 
     parser.add_argument(
         "--gravity",
         type=float,
         default=9.81,
-        help="Gravity acceleration magnitude in m/s^2. Default: 9.81.",
+        help="Gravity acceleration magnitude in m/s^2. Used only by mode=imu-gps.",
     )
 
     parser.add_argument(
         "--gps-blend",
         type=float,
         default=1.0,
-        help="GPS position correction blend. 1.0 = full snap to GPS. Default: 1.0.",
+        help=(
+            "GPS position correction blend. "
+            "1.0 = full snap to GPS. Used only by mode=imu-gps."
+        ),
     )
 
     return parser.parse_args()
@@ -795,6 +1102,7 @@ def main() -> int:
 
     try:
         return reconstruct_from_csv(
+            mode=args.mode,
             imu_path=args.imu,
             gps_path=args.gps,
             baro_path=args.baro,

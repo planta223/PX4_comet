@@ -35,39 +35,39 @@ ROK2 궤적 분석 파이프라인 4단계:
 # 기본 실행. 화면에 플롯 표시:
 #
 #   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv \
-#     --gps-local output/trajectory_00000197_gps_local.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv
+#     --trajectory output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local output/03_trajectory_00000197/gps_local.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv
 #
 # IMU acceleration norm까지 표시:
 #
 #   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv \
-#     --gps-local output/trajectory_00000197_gps_local.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv \
-#     --imu output/trajectory_inputs_00000197/imu.csv
+#     --trajectory output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local output/03_trajectory_00000197/gps_local.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv
 #
 # PNG 저장 + 화면 표시:
 #
 #   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv \
-#     --gps-local output/trajectory_00000197_gps_local.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv \
-#     --save-dir output/plots_00000197
+#     --trajectory output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local output/03_trajectory_00000197/gps_local.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --save-dir output/04_plots_00000197
 #
 # PNG 저장만 하고 화면 표시 생략:
 #
 #   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv \
-#     --gps-local output/trajectory_00000197_gps_local.csv \
-#     --baro output/trajectory_inputs_00000197/baro.csv \
-#     --save-dir output/plots_00000197 \
+#     --trajectory output/03_trajectory_00000197/trajectory.csv \
+#     --gps-local output/03_trajectory_00000197/gps_local.csv \
+#     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --save-dir output/04_plots_00000197 \
 #     --no-show
 #
 # GPS/BARO 없이 trajectory만 확인:
 #
 #   python scripts/04_plot_trajectory.py \
-#     --trajectory output/trajectory_00000197.csv
+#     --trajectory output/03_trajectory_00000197/trajectory.csv
 # =====================================================================
 
 from __future__ import annotations
@@ -135,6 +135,9 @@ def load_trajectory_csv(path: Path) -> pd.DataFrame:
 
     필요 컬럼:
         time_s, x, y, z, vx, vy, vz, lat, lng
+
+    Optional columns:
+        source_mode, alt_source
     """
     validate_file(path, "trajectory")
 
@@ -241,6 +244,49 @@ def load_imu_csv(path: Path | None) -> pd.DataFrame | None:
     return df
 
 
+def get_trajectory_mode(trajectory_df: pd.DataFrame) -> str | None:
+    """
+    Read the optional source_mode column if present.
+    """
+    if "source_mode" not in trajectory_df.columns:
+        return None
+
+    modes = [
+        str(value).strip()
+        for value in trajectory_df["source_mode"].dropna().unique().tolist()
+        if str(value).strip()
+    ]
+
+    if not modes:
+        return None
+
+    return modes[0]
+
+
+def make_title_prefix(title_prefix: str, trajectory_df: pd.DataFrame) -> str:
+    """
+    Append the reconstruction mode to plot titles when available.
+    """
+    mode = get_trajectory_mode(trajectory_df)
+
+    if mode is None:
+        return title_prefix
+
+    return f"{title_prefix} [{mode}]"
+
+
+def make_trajectory_label(trajectory_df: pd.DataFrame) -> str:
+    """
+    Build a legend label for the trajectory line.
+    """
+    mode = get_trajectory_mode(trajectory_df)
+
+    if mode is None:
+        return "Reconstructed trajectory"
+
+    return f"Trajectory ({mode})"
+
+
 # =====================================================================
 # [3] 플롯 함수
 # =====================================================================
@@ -248,6 +294,7 @@ def load_imu_csv(path: Path | None) -> pd.DataFrame | None:
 def plot_trajectory_3d(
     trajectory_df: pd.DataFrame,
     gps_local_df: pd.DataFrame | None = None,
+    trajectory_label: str = "Reconstructed trajectory",
     title: str = "ROK2 Reconstructed Trajectory - 3D",
 ) -> plt.Figure:
     """
@@ -266,7 +313,7 @@ def plot_trajectory_3d(
         trajectory_df["y"],
         trajectory_df["z"],
         linewidth=1.5,
-        label="Reconstructed trajectory",
+        label=trajectory_label,
     )
 
     if gps_local_df is not None:
@@ -292,6 +339,7 @@ def plot_trajectory_3d(
 def plot_trajectory_xy(
     trajectory_df: pd.DataFrame,
     gps_local_df: pd.DataFrame | None = None,
+    trajectory_label: str = "Reconstructed trajectory",
     title: str = "ROK2 Reconstructed Trajectory - XY",
 ) -> plt.Figure:
     """
@@ -307,7 +355,7 @@ def plot_trajectory_xy(
         trajectory_df["x"],
         trajectory_df["y"],
         linewidth=1.5,
-        label="Reconstructed trajectory",
+        label=trajectory_label,
     )
 
     if gps_local_df is not None:
@@ -350,6 +398,7 @@ def plot_altitude_profile(
     trajectory_df: pd.DataFrame,
     gps_local_df: pd.DataFrame | None = None,
     baro_df: pd.DataFrame | None = None,
+    trajectory_label: str = "Reconstructed altitude",
     title: str = "Altitude Profile",
 ) -> plt.Figure:
     """
@@ -370,7 +419,7 @@ def plot_altitude_profile(
         trajectory_df["time_s"],
         trajectory_df["z"],
         linewidth=1.5,
-        label="Reconstructed altitude",
+        label=trajectory_label,
     )
 
     if gps_local_df is not None:
@@ -631,9 +680,13 @@ def plot_from_csv(
 
     print("[INFO] Generating plots...")
 
+    title_prefix = make_title_prefix(title_prefix, trajectory_df)
+    trajectory_label = make_trajectory_label(trajectory_df)
+
     fig_3d = plot_trajectory_3d(
         trajectory_df=trajectory_df,
         gps_local_df=gps_local_df,
+        trajectory_label=trajectory_label,
         title=f"{title_prefix} - 3D Trajectory",
     )
     save_figure(fig_3d, save_dir, "01_trajectory_3d.png")
@@ -641,6 +694,7 @@ def plot_from_csv(
     fig_xy = plot_trajectory_xy(
         trajectory_df=trajectory_df,
         gps_local_df=gps_local_df,
+        trajectory_label=trajectory_label,
         title=f"{title_prefix} - XY Trajectory",
     )
     save_figure(fig_xy, save_dir, "02_trajectory_xy.png")
@@ -649,6 +703,7 @@ def plot_from_csv(
         trajectory_df=trajectory_df,
         gps_local_df=gps_local_df,
         baro_df=baro_df,
+        trajectory_label=f"{trajectory_label} altitude",
         title=f"{title_prefix} - Altitude Profile",
     )
     save_figure(fig_alt, save_dir, "03_altitude_profile.png")
