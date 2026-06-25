@@ -7,10 +7,10 @@ ROK2 궤적 분석 파이프라인 4단계:
 궤적 및 센서 비교 플롯을 생성하는 스크립트입니다.
 
 입력:
-    output/trajectory_<log_id>.csv
-    output/trajectory_<log_id>_gps_local.csv
-    output/trajectory_inputs_<log_id>/baro.csv   # 선택
-    output/trajectory_inputs_<log_id>/imu.csv    # 선택
+    output/03_trajectory_<log_id>/trajectory.csv
+    output/03_trajectory_<log_id>/gps_local.csv
+    output/02_trajectory_inputs_<log_id>/baro.csv   # 선택
+    output/02_trajectory_inputs_<log_id>/imu.csv    # 선택
 
 출력:
     화면 표시 또는 PNG 파일 저장
@@ -19,14 +19,17 @@ ROK2 궤적 분석 파이프라인 4단계:
     - 3D 궤적 플롯
     - XY 평면 궤적 플롯
     - 고도 profile 플롯
+    - GPS altitude drift 플롯
     - 속도 profile 플롯
-    - GPS 품질 플롯. nsats/hdop 컬럼이 있을 때만
+    - GPS 품질 플롯. nsats/hdop/status 컬럼이 있을 때만
     - IMU 가속도 norm 플롯. --imu 입력이 있을 때만
 
-주의:
+중요:
     - 이 스크립트는 궤적을 다시 계산하지 않습니다.
-    - RK4 적분, GPS 보정은 03_reconstruct_trajectory.py에서 이미 수행된 것으로 가정합니다.
-    - 플롯 결과가 비정상일 경우 01/02/03 단계의 출력 CSV를 먼저 확인하십시오.
+    - 03_reconstruct_trajectory.py가 만든 trajectory.csv를 그대로 시각화합니다.
+    - gps-baro 모드에서는 trajectory z가 BARO 기반이고, gps_local.gz는 GPS altitude drift입니다.
+      따라서 3D plot에서 GPS observation의 z는 trajectory z에 투영해서 표시합니다.
+    - GPS altitude drift는 별도 plot으로 분리합니다.
 """
 
 # =====================================================================
@@ -53,6 +56,7 @@ ROK2 궤적 분석 파이프라인 4단계:
 #     --trajectory output/03_trajectory_00000197/trajectory.csv \
 #     --gps-local output/03_trajectory_00000197/gps_local.csv \
 #     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv \
 #     --save-dir output/04_plots_00000197
 #
 # PNG 저장만 하고 화면 표시 생략:
@@ -61,13 +65,25 @@ ROK2 궤적 분석 파이프라인 4단계:
 #     --trajectory output/03_trajectory_00000197/trajectory.csv \
 #     --gps-local output/03_trajectory_00000197/gps_local.csv \
 #     --baro output/02_trajectory_inputs_00000197/baro.csv \
+#     --imu output/02_trajectory_inputs_00000197/imu.csv \
 #     --save-dir output/04_plots_00000197 \
 #     --no-show
 #
-# GPS/BARO 없이 trajectory만 확인:
+# trajectory만 확인:
 #
 #   python scripts/04_plot_trajectory.py \
 #     --trajectory output/03_trajectory_00000197/trajectory.csv
+#
+# 출력 예:
+#
+#   output/04_plots_00000197/
+#   ├── 01_trajectory_3d.png
+#   ├── 02_trajectory_xy.png
+#   ├── 03_altitude_profile.png
+#   ├── 04_gps_altitude_drift.png
+#   ├── 05_velocity_profile.png
+#   ├── 06_gps_quality.png
+#   └── 07_imu_acc_norm.png
 # =====================================================================
 
 from __future__ import annotations
@@ -125,6 +141,13 @@ def save_figure(fig: plt.Figure, save_dir: Path | None, filename: str) -> None:
     print(f"[SAVE] {out_path}")
 
 
+def format_range(series: pd.Series) -> str:
+    """
+    min/max 범위를 문자열로 표시한다.
+    """
+    return f"{float(series.min()):.3f} ~ {float(series.max()):.3f}"
+
+
 # =====================================================================
 # [2] CSV 로딩
 # =====================================================================
@@ -136,7 +159,7 @@ def load_trajectory_csv(path: Path) -> pd.DataFrame:
     필요 컬럼:
         time_s, x, y, z, vx, vy, vz, lat, lng
 
-    Optional columns:
+    선택 컬럼:
         source_mode, alt_source
     """
     validate_file(path, "trajectory")
@@ -244,9 +267,13 @@ def load_imu_csv(path: Path | None) -> pd.DataFrame | None:
     return df
 
 
+# =====================================================================
+# [3] trajectory metadata
+# =====================================================================
+
 def get_trajectory_mode(trajectory_df: pd.DataFrame) -> str | None:
     """
-    Read the optional source_mode column if present.
+    trajectory.csv의 source_mode 컬럼을 읽는다.
     """
     if "source_mode" not in trajectory_df.columns:
         return None
@@ -263,21 +290,44 @@ def get_trajectory_mode(trajectory_df: pd.DataFrame) -> str | None:
     return modes[0]
 
 
+def get_trajectory_alt_source(trajectory_df: pd.DataFrame) -> str | None:
+    """
+    trajectory.csv의 alt_source 컬럼을 읽는다.
+    """
+    if "alt_source" not in trajectory_df.columns:
+        return None
+
+    sources = [
+        str(value).strip()
+        for value in trajectory_df["alt_source"].dropna().unique().tolist()
+        if str(value).strip()
+    ]
+
+    if not sources:
+        return None
+
+    return sources[0]
+
+
 def make_title_prefix(title_prefix: str, trajectory_df: pd.DataFrame) -> str:
     """
-    Append the reconstruction mode to plot titles when available.
+    plot 제목에 reconstruction mode와 altitude source를 표시한다.
     """
     mode = get_trajectory_mode(trajectory_df)
+    alt_source = get_trajectory_alt_source(trajectory_df)
 
     if mode is None:
         return title_prefix
 
-    return f"{title_prefix} [{mode}]"
+    if alt_source is None:
+        return f"{title_prefix} [{mode}]"
+
+    return f"{title_prefix} [{mode} / {alt_source}]"
 
 
 def make_trajectory_label(trajectory_df: pd.DataFrame) -> str:
     """
-    Build a legend label for the trajectory line.
+    trajectory line legend를 만든다.
     """
     mode = get_trajectory_mode(trajectory_df)
 
@@ -288,7 +338,44 @@ def make_trajectory_label(trajectory_df: pd.DataFrame) -> str:
 
 
 # =====================================================================
-# [3] 플롯 함수
+# [4] plot용 데이터 가공
+# =====================================================================
+
+def make_projected_gps_for_plot(
+    trajectory_df: pd.DataFrame,
+    gps_local_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    GPS x/y 관측점을 trajectory z 기준으로 투영한다.
+
+    gps-baro 모드에서는 trajectory z가 BARO 보간 고도이고,
+    gps_local.gz는 GPS altitude drift이다.
+
+    따라서 3D plot에서 GPS observation을 그대로 gz로 찍으면
+    실제 gps-baro 궤적과 다른 고도 기준이 섞여 보인다.
+
+    이 함수는 GPS time_s에 해당하는 trajectory z를 보간해서 plot_z로 추가한다.
+    """
+    projected = gps_local_df.copy()
+
+    projected["plot_z"] = np.interp(
+        projected["time_s"].to_numpy(dtype=float),
+        trajectory_df["time_s"].to_numpy(dtype=float),
+        trajectory_df["z"].to_numpy(dtype=float),
+    )
+
+    return projected
+
+
+def compute_baro_relative_altitude(baro_df: pd.DataFrame) -> pd.Series:
+    """
+    BARO 상대고도 계산.
+    """
+    return baro_df["baro_alt"].astype(float) - float(baro_df["baro_alt"].iloc[0])
+
+
+# =====================================================================
+# [5] 플롯 함수
 # =====================================================================
 
 def plot_trajectory_3d(
@@ -304,6 +391,13 @@ def plot_trajectory_3d(
         x = East [m]
         y = North [m]
         z = Up [m]
+
+    gps-baro 모드:
+        trajectory z는 BARO 기반이다.
+        GPS observation은 x/y 관측점만 의미가 크므로 z는 trajectory z로 투영한다.
+
+    gps-only / imu-gps 모드:
+        GPS observation은 gps_local.gz 그대로 표시한다.
     """
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection="3d")
@@ -316,14 +410,30 @@ def plot_trajectory_3d(
         label=trajectory_label,
     )
 
+    mode = get_trajectory_mode(trajectory_df)
+
     if gps_local_df is not None:
-        ax.scatter(
-            gps_local_df["gx"],
-            gps_local_df["gy"],
-            gps_local_df["gz"],
-            s=18,
-            label="GPS observations",
-        )
+        if mode == "gps-baro":
+            gps_plot = make_projected_gps_for_plot(
+                trajectory_df=trajectory_df,
+                gps_local_df=gps_local_df,
+            )
+
+            ax.scatter(
+                gps_plot["gx"],
+                gps_plot["gy"],
+                gps_plot["plot_z"],
+                s=18,
+                label="GPS horizontal obs. projected to BARO z",
+            )
+        else:
+            ax.scatter(
+                gps_local_df["gx"],
+                gps_local_df["gy"],
+                gps_local_df["gz"],
+                s=18,
+                label="GPS observations",
+            )
 
     ax.set_xlabel("East x (m)")
     ax.set_ylabel("North y (m)")
@@ -396,7 +506,6 @@ def plot_trajectory_xy(
 
 def plot_altitude_profile(
     trajectory_df: pd.DataFrame,
-    gps_local_df: pd.DataFrame | None = None,
     baro_df: pd.DataFrame | None = None,
     trajectory_label: str = "Reconstructed altitude",
     title: str = "Altitude Profile",
@@ -404,14 +513,14 @@ def plot_altitude_profile(
     """
     시간에 따른 고도 플롯.
 
-    trajectory z:
-        03번 재구성 결과의 상대고도
+    포함:
+        - trajectory z
+        - BARO relative altitude
 
-    GPS gz:
-        첫 GPS 고도 기준 상대고도
+    제외:
+        - GPS altitude drift
 
-    BARO:
-        첫 BARO 고도 기준 상대고도
+    GPS altitude drift는 plot_gps_altitude_drift()에서 별도 표시한다.
     """
     fig, ax = plt.subplots(figsize=(11, 5))
 
@@ -422,16 +531,8 @@ def plot_altitude_profile(
         label=trajectory_label,
     )
 
-    if gps_local_df is not None:
-        ax.scatter(
-            gps_local_df["time_s"],
-            gps_local_df["gz"],
-            s=18,
-            label="GPS altitude",
-        )
-
     if baro_df is not None:
-        baro_rel_alt = baro_df["baro_alt"].astype(float) - float(baro_df["baro_alt"].iloc[0])
+        baro_rel_alt = compute_baro_relative_altitude(baro_df)
 
         ax.plot(
             baro_df["time_s"],
@@ -442,6 +543,44 @@ def plot_altitude_profile(
 
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Altitude (m, relative)")
+    ax.set_title(title)
+    ax.grid(alpha=0.3)
+    ax.legend()
+
+    plt.tight_layout()
+
+    return fig
+
+
+def plot_gps_altitude_drift(
+    gps_local_df: pd.DataFrame,
+    title: str = "GPS Altitude Drift",
+) -> plt.Figure:
+    """
+    GPS 상대고도 drift 확인용 플롯.
+
+    gps-baro mode에서 gps_local.gz는 trajectory z로 쓰지 않는다.
+    이 plot은 GPS altitude가 얼마나 drift하는지 별도로 확인하기 위한 것이다.
+    """
+    fig, ax = plt.subplots(figsize=(11, 5))
+
+    ax.plot(
+        gps_local_df["time_s"],
+        gps_local_df["gz"],
+        linewidth=1.0,
+        marker=".",
+        label="GPS relative altitude",
+    )
+
+    ax.axhline(
+        0.0,
+        linestyle="--",
+        linewidth=1.0,
+        label="Initial GPS altitude",
+    )
+
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("GPS altitude drift (m, relative)")
     ax.set_title(title)
     ax.grid(alpha=0.3)
     ax.legend()
@@ -512,7 +651,7 @@ def plot_gps_quality(
     """
     GPS 품질 플롯.
 
-    nsats 또는 hdop 컬럼이 없으면 None 반환.
+    nsats, hdop, status 컬럼 중 하나라도 있으면 그린다.
     """
     has_nsats = "nsats" in gps_local_df.columns and not gps_local_df["nsats"].isna().all()
     has_hdop = "hdop" in gps_local_df.columns and not gps_local_df["hdop"].isna().all()
@@ -576,8 +715,8 @@ def plot_imu_acc_norm(
     """
     IMU 가속도 norm 플롯.
 
-    정지 구간에서는 보통 9.81 m/s^2 근처가 나와야 한다.
-    로켓 발사 구간에서는 급격한 피크가 나타난다.
+    정지 구간에서는 보통 9.81 m/s² 근처가 나와야 한다.
+    이동/진동/충격 구간에서는 피크가 나타날 수 있다.
     """
     fig, ax = plt.subplots(figsize=(11, 5))
 
@@ -613,8 +752,40 @@ def plot_imu_acc_norm(
 
 
 # =====================================================================
-# [4] 플롯 파이프라인
+# [6] 플롯 파이프라인
 # =====================================================================
+
+def print_basic_ranges(
+    trajectory_df: pd.DataFrame,
+    gps_local_df: pd.DataFrame | None,
+    baro_df: pd.DataFrame | None,
+) -> None:
+    """
+    플롯 전 주요 범위를 콘솔에 출력한다.
+    """
+    print("[RANGE] trajectory")
+    print(f"        x: {format_range(trajectory_df['x'])} m")
+    print(f"        y: {format_range(trajectory_df['y'])} m")
+    print(f"        z: {format_range(trajectory_df['z'])} m")
+
+    speed = np.sqrt(
+        trajectory_df["vx"] ** 2
+        + trajectory_df["vy"] ** 2
+        + trajectory_df["vz"] ** 2
+    )
+    print(f"        speed max: {float(speed.max()):.3f} m/s")
+
+    if gps_local_df is not None:
+        print("[RANGE] gps_local")
+        print(f"        gx: {format_range(gps_local_df['gx'])} m")
+        print(f"        gy: {format_range(gps_local_df['gy'])} m")
+        print(f"        gz: {format_range(gps_local_df['gz'])} m")
+
+    if baro_df is not None:
+        baro_rel_alt = compute_baro_relative_altitude(baro_df)
+        print("[RANGE] baro")
+        print(f"        rel_alt: {format_range(baro_rel_alt)} m")
+
 
 def plot_from_csv(
     trajectory_path: Path,
@@ -678,6 +849,12 @@ def plot_from_csv(
     else:
         print("[4/4] Loading IMU: skipped")
 
+    print_basic_ranges(
+        trajectory_df=trajectory_df,
+        gps_local_df=gps_local_df,
+        baro_df=baro_df,
+    )
+
     print("[INFO] Generating plots...")
 
     title_prefix = make_title_prefix(title_prefix, trajectory_df)
@@ -701,18 +878,26 @@ def plot_from_csv(
 
     fig_alt = plot_altitude_profile(
         trajectory_df=trajectory_df,
-        gps_local_df=gps_local_df,
         baro_df=baro_df,
         trajectory_label=f"{trajectory_label} altitude",
         title=f"{title_prefix} - Altitude Profile",
     )
     save_figure(fig_alt, save_dir, "03_altitude_profile.png")
 
+    if gps_local_df is not None:
+        fig_gps_alt = plot_gps_altitude_drift(
+            gps_local_df=gps_local_df,
+            title=f"{title_prefix} - GPS Altitude Drift",
+        )
+        save_figure(fig_gps_alt, save_dir, "04_gps_altitude_drift.png")
+    else:
+        print("[INFO] GPS altitude drift plot skipped: gps_local.csv not provided.")
+
     fig_vel = plot_velocity_profile(
         trajectory_df=trajectory_df,
         title=f"{title_prefix} - Velocity Profile",
     )
-    save_figure(fig_vel, save_dir, "04_velocity_profile.png")
+    save_figure(fig_vel, save_dir, "05_velocity_profile.png")
 
     if gps_local_df is not None:
         fig_gps = plot_gps_quality(
@@ -721,16 +906,20 @@ def plot_from_csv(
         )
 
         if fig_gps is not None:
-            save_figure(fig_gps, save_dir, "05_gps_quality.png")
+            save_figure(fig_gps, save_dir, "06_gps_quality.png")
         else:
             print("[INFO] GPS quality plot skipped: nsats/hdop/status columns not available.")
+    else:
+        print("[INFO] GPS quality plot skipped: gps_local.csv not provided.")
 
     if imu_df is not None:
         fig_imu = plot_imu_acc_norm(
             imu_df=imu_df,
             title=f"{title_prefix} - IMU Acceleration Norm",
         )
-        save_figure(fig_imu, save_dir, "06_imu_acc_norm.png")
+        save_figure(fig_imu, save_dir, "07_imu_acc_norm.png")
+    else:
+        print("[INFO] IMU acceleration norm plot skipped: imu.csv not provided.")
 
     if not no_show:
         plt.show()
@@ -743,7 +932,7 @@ def plot_from_csv(
 
 
 # =====================================================================
-# [5] CLI
+# [7] CLI
 # =====================================================================
 
 def parse_args() -> argparse.Namespace:
