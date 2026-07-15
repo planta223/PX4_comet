@@ -6,15 +6,42 @@ ArduPilot DataFlash `.BIN` 파일을 `pymavlink`로 직접 읽고, EKF3의 위�
 
 ## 설치
 
-Python 3.9 이상을 권장합니다. 프로젝트 디렉터리에서 가상환경을 만들고 의존성을 설치합니다.
+Python 3.9 이상을 권장합니다. 저장소 루트(`PX4_comet`)에서 다음 명령을 한 번에 실행합니다. 이미 프롬프트 경로가 `.../bin_ekf_replay`라면 첫 번째 `cd`는 실행하지 마십시오.
 
 ```bash
 cd bin_ekf_replay
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
 ```
+
+### Ubuntu에서 `ensurepip is not available`가 나오는 경우
+
+Ubuntu/Debian의 최소 Python 설치에는 가상환경 모듈이 빠져 있을 수 있습니다. 현재 Python이 3.10이라면 다음처럼 설치한 뒤, 중간에 만들어진 불완전한 `.venv`를 다시 생성합니다.
+
+```bash
+sudo apt update
+sudo apt install python3.10-venv
+
+cd ~/Workspace/PX4_comet/bin_ekf_replay
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+```
+
+sudo 권한이 없다면 불완전한 `.venv`에 공식 PyPA pip bootstrap을 설치하고, 활성화 없이 가상환경 Python을 직접 호출할 수도 있습니다.
+
+```bash
+cd ~/Workspace/PX4_comet/bin_ekf_replay
+curl -fsSL https://bootstrap.pypa.io/get-pip.py | .venv/bin/python3 -
+.venv/bin/python3 -m pip install -r requirements.txt
+.venv/bin/python3 replay_bin_ekf.py ../LOGS/00000200.BIN --summary-only
+```
+
+터미널에 `^[[200~cd`가 보이면 붙여넣기 제어문자가 명령 앞에 포함된 것입니다. 해당 줄을 지우고 `cd bin_ekf_replay`를 직접 다시 입력하십시오.
 
 ## 실행
 
