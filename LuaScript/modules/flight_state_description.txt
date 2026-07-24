@@ -1,0 +1,385 @@
+코멧 비행 상태머신 전이 및 동작 규칙
+
+1. 상태 정의
+
+비행 상태는 다음과 같이 구성한다.
+
+* READY: 발사 대기 상태
+* ASCENT: 상승 상태
+* APOGEE: 정점 감지 및 낙하산 사출 상태
+* DESCENT: 낙하산 전개 후 하강 상태
+* LANDED: 착륙 완료 상태
+* ERROR: 센서 이상 또는 낙하산 사출 실패에 대응하는 비상 상태
+
+2. READY 상태
+
+2.1 사용 센서
+
+READY 상태에서는 발사 감지를 위해 가속도 데이터만 사용한다.
+
+필수 조건:
+
+* acceleration_valid = true
+
+위치, 속도 및 자세 데이터가 유효하지 않아도 발사 감지는 수행할 수 있다.
+
+2.2 발사 감지 규칙
+
+다음 조건이 CONFIRM_COUNT번 연속으로 충족되면 READY 상태에서 ASCENT 상태로 전이한다.
+
+* total_acceleration ≥ ACCEL_THRESHOLD_MPS2
+
+조건을 만족한 현재 샘플의 연속 횟수는 launch_confirm_count에 저장한다.
+
+* 조건 만족 시:
+  launch_confirm_count를 1 증가시킨다.
+* 조건 불만족 시:
+  launch_confirm_count를 0으로 초기화한다.
+* 가속도 데이터가 유효하지 않은 경우:
+  launch_confirm_count를 0으로 초기화한다.
+
+전이 조건:
+
+* launch_confirm_count ≥ READY_TO_ASCENT.CONFIRM_COUNT
+
+전이 시 수행 작업:
+
+* 현재 시각을 launch_time_ms에 저장한다.
+* 현재 고도가 유효하면 maximum_altitude_m의 초기값으로 저장한다.
+* 현재 고도가 유효하지 않으면 maximum_altitude_m을 0으로 설정한다.
+* 발사, 정점 및 착륙 확인 카운터를 초기화한다.
+* 비행 상태를 ASCENT로 변경한다.
+
+현재 설정값 기준:
+
+* ACCEL_THRESHOLD_MPS2 = 25.0 m/s²
+* CONFIRM_COUNT = 3
+* 메인 루프 주기 = 50 ms
+
+따라서 약 150 ms 동안 연속으로 25.0 m/s² 이상의 가속도가 측정되면 발사로 판단한다.
+
+3. ASCENT 상태
+
+3.1 사용 센서
+
+ASCENT 상태에서는 정점 감지를 위해 고도와 NED 수직속도를 사용한다.
+
+필수 조건:
+
+* position_valid = true
+* velocity_valid = true
+
+필수 데이터:
+
+* altitude
+* velocity_d
+
+NED 좌표계에서 velocity_d의 부호는 다음과 같다.
+
+* 상승: velocity_d < 0
+* 하강: velocity_d > 0
+
+3.2 최고고도 갱신 규칙
+
+현재 고도가 저장된 최고고도보다 높으면 maximum_altitude_m을 현재 고도로 갱신한다.
+
+조건:
+
+* altitude > maximum_altitude_m
+
+갱신 시 수행 작업:
+
+* maximum_altitude_m = altitude
+* apogee_confirm_count = 0
+
+최고고도가 갱신된 경우 로켓이 아직 상승 중인 것으로 판단하여 정점 확인 카운터를 초기화한다.
+
+3.3 정점 감지 규칙
+
+다음 세 조건이 모두 충족된 샘플이 CONFIRM_COUNT번 연속으로 발생하면 ASCENT 상태에서 APOGEE 상태로 전이한다.
+
+조건 1: 발사 후 최소시간 경과
+
+* 현재 시각 - launch_time_ms ≥ MIN_TIME_AFTER_LAUNCH_MS
+
+조건 2: 하강 속도 확인
+
+* velocity_d ≥ MIN_DESCENT_SPEED_MPS
+
+조건 3: 최고고도 대비 고도 하락 확인
+
+* altitude ≤ maximum_altitude_m - ALTITUDE_DROP_MARGIN_M
+
+세 조건을 모두 만족하면 apogee_confirm_count를 1 증가시킨다.
+
+하나라도 만족하지 않으면 apogee_confirm_count를 0으로 초기화한다.
+
+전이 조건:
+
+* apogee_confirm_count ≥ ASCENT_TO_APOGEE.CONFIRM_COUNT
+
+현재 설정값 기준:
+
+* MIN_TIME_AFTER_LAUNCH_MS = 1000 ms
+* MIN_DESCENT_SPEED_MPS = 1.0 m/s
+* ALTITUDE_DROP_MARGIN_M = 2.0 m
+* CONFIRM_COUNT = 3
+
+즉, 발사 후 최소 1초가 지났고, 아래쪽 속도가 1.0 m/s 이상이며, 최고고도보다 2.0 m 이상 낮아진 상태가 3회 연속 확인되면 정점으로 판단한다.
+
+3.4 상승 시간 초과 규칙
+
+정점 감지 조건이 충족되지 않더라도 발사 후 최대 상승 시간이 지나면 APOGEE 상태로 강제 전이한다.
+
+조건:
+
+* 현재 시각 - launch_time_ms ≥ MAX_ASCENT_TIME_MS
+
+현재 설정값 기준:
+
+* MAX_ASCENT_TIME_MS = 15000 ms
+
+즉, 발사 후 15초가 지나면 센서 기반 정점 감지 결과와 관계없이 낙하산 사출 단계로 진입한다.
+
+이는 정점 감지 실패에 대비한 안전 타이머이다.
+
+4. APOGEE 상태
+
+4.1 낙하산 사출 규칙
+
+APOGEE 상태에 진입했을 때 parachute_deployed가 false이면 두 서보를 모두 해제한다.
+
+수행 명령:
+
+* servo.release_all()
+
+사출 성공 시:
+
+* parachute_deployed = true
+* APOGEE 상태를 유지한다.
+
+사출 실패 시:
+
+* ERROR 상태로 전이한다.
+
+이미 parachute_deployed가 true이면 중복 사출 명령을 실행하지 않는다.
+
+4.2 APOGEE 유지 규칙
+
+낙하산 사출 후 최소 유지시간이 경과하면 APOGEE 상태에서 DESCENT 상태로 전이한다.
+
+조건:
+
+* 현재 시각 - state_enter_time_ms ≥ MIN_HOLD_TIME_MS
+
+현재 설정값 기준:
+
+* MIN_HOLD_TIME_MS = 1000 ms
+
+즉, APOGEE 상태 진입 후 최소 1초가 지나야 DESCENT 상태로 전이한다.
+
+5. DESCENT 상태
+
+5.1 사용 센서
+
+DESCENT 상태에서는 착륙 판단을 위해 고도, 수직속도 및 가속도 크기를 사용한다.
+
+필수 조건:
+
+* position_valid = true
+* velocity_valid = true
+* acceleration_valid = true
+
+필수 데이터:
+
+* altitude
+* velocity_d
+* total_acceleration
+
+필수 센서가 유효하지 않으면 landing_confirm_count를 0으로 초기화하고 착륙 판단을 수행하지 않는다.
+
+5.2 착륙 감지 규칙
+
+다음 세 조건이 모두 충족된 샘플이 CONFIRM_COUNT번 연속으로 발생하면 DESCENT 상태에서 LANDED 상태로 전이한다.
+
+조건 1: 고도 조건
+
+* altitude ≤ MAX_RELATIVE_ALTITUDE_M
+
+조건 2: 수직속도 조건
+
+* |velocity_d| ≤ MAX_ABS_VERTICAL_SPEED_MPS
+
+조건 3: 가속도 안정 조건
+
+* ACCEL_MIN_MPS2 ≤ total_acceleration ≤ ACCEL_MAX_MPS2
+
+세 조건을 모두 만족하면 landing_confirm_count를 1 증가시킨다.
+
+하나라도 만족하지 않으면 landing_confirm_count를 0으로 초기화한다.
+
+전이 조건:
+
+* landing_confirm_count ≥ DESCENT_TO_LANDED.CONFIRM_COUNT
+
+현재 설정값 기준:
+
+* MAX_RELATIVE_ALTITUDE_M = 3.0 m
+* MAX_ABS_VERTICAL_SPEED_MPS = 1.5 m/s
+* ACCEL_MIN_MPS2 = 8.0 m/s²
+* ACCEL_MAX_MPS2 = 12.0 m/s²
+* CONFIRM_COUNT = 20
+* 메인 루프 주기 = 50 ms
+
+따라서 상대고도가 3.0 m 이하이고, 수직속도의 절댓값이 1.5 m/s 이하이며, 가속도 크기가 8.0~12.0 m/s² 범위인 상태가 약 1초 동안 연속 유지되면 착륙으로 판단한다.
+
+6. LANDED 상태
+
+LANDED 상태는 비행 종료 상태이다.
+
+자동 상태 전이는 수행하지 않는다.
+
+재비행을 위해서는 외부에서 reset()을 호출해야 한다.
+
+reset()은 READY 또는 LANDED 상태에서만 허용한다.
+
+reset() 수행 시:
+
+* 모든 서보를 잠금 위치로 이동한다.
+* 현재 상태를 READY로 초기화한다.
+* 상태 전이 시각과 각 확인 카운터를 초기화한다.
+* 최고고도 기록을 초기화한다.
+* 낙하산 전개 상태를 false로 초기화한다.
+
+7. ERROR 상태
+
+ERROR 상태는 비상 대응 상태이다.
+
+ERROR 상태에서 낙하산이 아직 전개되지 않았다면 deploy_parachute()를 호출한다.
+
+조건:
+
+* parachute_deployed = false
+
+사출 성공 시:
+
+* parachute_deployed = true
+
+사출 실패 시:
+
+* ERROR 상태를 유지한다.
+* 이후 업데이트에서 사출을 다시 시도한다.
+
+현재 구조에서는 재시도 간격이 별도로 없으므로 메인 루프 주기마다 사출을 다시 시도할 수 있다.
+
+8. 센서 타임아웃 규칙
+
+비행 중 필요한 센서 데이터가 유효하지 않은 상태가 SENSOR_TIMEOUT_MS 이상 지속되면 ERROR 상태로 전이한다.
+
+현재 설정값:
+
+* SENSOR_TIMEOUT_MS = 1500 ms
+
+센서 유효성은 상태별로 판단한다.
+
+READY 상태:
+
+* acceleration_valid 필요
+* 센서 무효 시 발사 확인 카운터만 초기화
+* 센서 타임아웃으로 ERROR 전이하지 않음
+
+ASCENT 상태:
+
+* position_valid 필요
+* velocity_valid 필요
+* 필요한 센서가 1500 ms 이상 무효이면 ERROR 전이
+
+APOGEE 상태:
+
+* 낙하산 사출이 우선이므로 별도의 센서 유효성 없이 동작
+
+DESCENT 상태:
+
+* position_valid 필요
+* velocity_valid 필요
+* acceleration_valid 필요
+* 센서 무효 시 착륙 판단을 중단
+* 낙하산이 이미 전개된 상태이므로 센서 타임아웃을 ERROR로 처리할 필요가 있는지는 별도 정책 결정이 필요함
+
+9. LoRa 서보 명령 허용 규칙
+
+9.1 잠금 명령
+
+다음 명령은 READY 또는 LANDED 상태에서만 허용한다.
+
+* SERVO1_LOCK
+* SERVO2_LOCK
+* LOCK_ALL
+
+ASCENT, APOGEE, DESCENT 또는 ERROR 상태에서는 비행 중 낙하산을 다시 잠그는 동작을 방지하기 위해 거부한다.
+
+9.2 해제 명령
+
+다음 명령은 APOGEE, DESCENT 또는 ERROR 상태에서만 허용한다.
+
+* SERVO1_RELEASE
+* SERVO2_RELEASE
+* RELEASE_ALL
+
+READY 상태에서는 지상 오사출 방지를 위해 거부한다.
+
+ASCENT 상태에서는 추진 중 또는 상승 중 오사출 방지를 위해 거부한다.
+
+9.3 명령 처리 결과
+
+허용되지 않은 명령:
+
+* ACK_RESULT.NOT_ALLOWED 전송
+
+명령 실행 성공:
+
+* ACK_RESULT.OK 전송
+
+명령 실행 실패:
+
+* ACK_RESULT.EXECUTION_FAILED 전송
+
+유효하지 않은 명령 코드는 LoRa 모듈에서 사전에 검사하고:
+
+* ACK_RESULT.INVALID_COMMAND 전송
+
+10. 상태 전이 요약
+
+READY → ASCENT
+
+* 가속도 유효
+* total_acceleration ≥ ACCEL_THRESHOLD_MPS2
+* 위 조건이 CONFIRM_COUNT번 연속 발생
+
+ASCENT → APOGEE
+
+* 발사 후 최소시간 경과
+* velocity_d ≥ MIN_DESCENT_SPEED_MPS
+* 최고고도 대비 ALTITUDE_DROP_MARGIN_M 이상 하강
+* 위 조건이 CONFIRM_COUNT번 연속 발생
+
+또는:
+
+* 발사 후 MAX_ASCENT_TIME_MS 경과
+
+APOGEE → DESCENT
+
+* 낙하산 사출 성공
+* APOGEE 상태 유지시간이 MIN_HOLD_TIME_MS 이상 경과
+
+DESCENT → LANDED
+
+* 상대고도가 MAX_RELATIVE_ALTITUDE_M 이하
+* 수직속도 절댓값이 MAX_ABS_VERTICAL_SPEED_MPS 이하
+* 가속도 크기가 ACCEL_MIN_MPS2 이상이고 ACCEL_MAX_MPS2 이하
+* 위 조건이 CONFIRM_COUNT번 연속 발생
+
+비행 상태 → ERROR
+
+* 비행 중 필요한 센서 데이터가 SENSOR_TIMEOUT_MS 이상 유효하지 않음
+* 낙하산 사출 명령 실행 실패
