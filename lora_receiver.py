@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Receive and log 33-byte COMET telemetry packets from the LoRa UART."""
+"""Receive and log 34-byte COMET telemetry packets from the LoRa UART."""
 
 from __future__ import annotations
 
@@ -14,11 +14,11 @@ from typing import IO, Iterable, Optional
 
 
 TELEMETRY_HEADER = 0xA5
-TELEMETRY_LENGTH = 33
+TELEMETRY_LENGTH = 34
 STATE_NAMES = {
     0: "READY",
     1: "ASCENT",
-    2: "APOGEE",
+    2: "DEPLOY",
     3: "DESCENT",
     4: "LANDED",
     5: "ERROR",
@@ -29,6 +29,14 @@ STATUS_BITS = {
     0x04: "ATTITUDE",
     0x08: "ACCELERATION",
 }
+FAULT_BITS = {
+    0x01: "ACCEL_SENSOR_INVALID",
+    0x02: "POSITION_INVALID",
+    0x04: "VELOCITY_INVALID",
+    0x08: "ASCENT_TIMEOUT",
+    0x10: "DEPLOY_COMMAND_FAILED",
+    0x20: "LORA_UNAVAILABLE",
+}
 CSV_FIELDS = [
     "timestamp_iso",
     "packet_type",
@@ -37,6 +45,8 @@ CSV_FIELDS = [
     "state_name",
     "status_flags",
     "status_names",
+    "fault_flags",
+    "fault_names",
     "time_ms",
     "latitude_deg",
     "longitude_deg",
@@ -72,6 +82,7 @@ class TelemetryPacket:
     sequence: int
     state_id: int
     status_flags: int
+    fault_flags: int
     time_ms: int
     latitude_deg: float
     longitude_deg: float
@@ -95,6 +106,12 @@ class TelemetryPacket:
         names = [name for bit, name in STATUS_BITS.items() if self.status_flags & bit]
         return "|".join(names) if names else "NONE"
 
+    @property
+    def fault_names(self) -> str:
+        """Return a pipe-separated list of active flight faults."""
+        names = [name for bit, name in FAULT_BITS.items() if self.fault_flags & bit]
+        return "|".join(names) if names else "NONE"
+
     def csv_row(self) -> dict[str, object]:
         """Return one row matching the fixed CSV schema."""
         return {
@@ -105,6 +122,8 @@ class TelemetryPacket:
             "state_name": self.state_name,
             "status_flags": f"0x{self.status_flags:02X}",
             "status_names": self.status_names,
+            "fault_flags": f"0x{self.fault_flags:02X}",
+            "fault_names": self.fault_names,
             "time_ms": self.time_ms,
             "latitude_deg": self.latitude_deg,
             "longitude_deg": self.longitude_deg,
@@ -240,6 +259,7 @@ def decode_packet(raw: bytes) -> TelemetryPacket:
         sequence,
         state_id,
         status_flags,
+        fault_flags,
         time_ms,
         latitude_raw,
         longitude_raw,
@@ -250,7 +270,7 @@ def decode_packet(raw: bytes) -> TelemetryPacket:
         roll_raw,
         pitch_raw,
         yaw_raw,
-    ) = struct.unpack_from("<BBBBIiiihhhhhh", raw)
+    ) = struct.unpack_from("<BBBBBIiiihhhhhh", raw)
 
     if header != TELEMETRY_HEADER:
         raise ValueError(f"unexpected telemetry header: 0x{header:02X}")
@@ -260,6 +280,7 @@ def decode_packet(raw: bytes) -> TelemetryPacket:
         sequence=sequence,
         state_id=state_id,
         status_flags=status_flags,
+        fault_flags=fault_flags,
         time_ms=time_ms,
         latitude_deg=latitude_raw / 10_000_000.0,
         longitude_deg=longitude_raw / 10_000_000.0,
@@ -279,7 +300,8 @@ def format_packet(packet: TelemetryPacket, show_raw_hex: bool) -> str:
     timestamp = packet.timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     line = (
         f"[{timestamp}] TELEMETRY seq={packet.sequence} state={packet.state_name} "
-        f"flags=0x{packet.status_flags:02X}({packet.status_names}) "
+        f"status=0x{packet.status_flags:02X}({packet.status_names}) "
+        f"faults=0x{packet.fault_flags:02X}({packet.fault_names}) "
         f"lat={packet.latitude_deg:.7f} lon={packet.longitude_deg:.7f} "
         f"alt={packet.altitude_m:.2f}m "
         f"velNED=({packet.velocity_n_mps:.1f},{packet.velocity_e_mps:.1f},"
@@ -406,6 +428,7 @@ def build_test_packet(
     sequence: int,
     state_id: int,
     status_flags: int,
+    fault_flags: int,
     time_ms: int,
     latitude_raw: int,
     longitude_raw: int,
@@ -419,11 +442,12 @@ def build_test_packet(
 ) -> bytes:
     """Build one Lua-compatible packet for the built-in self-test."""
     payload = struct.pack(
-        "<BBBBIiiihhhhhh",
+        "<BBBBBIiiihhhhhh",
         TELEMETRY_HEADER,
         sequence,
         state_id,
         status_flags,
+        fault_flags,
         time_ms,
         latitude_raw,
         longitude_raw,
@@ -444,6 +468,7 @@ def run_self_test() -> int:
         sequence=254,
         state_id=1,
         status_flags=0x0F,
+        fault_flags=0x20,
         time_ms=123_456,
         latitude_raw=-371_234_567,
         longitude_raw=1_271_234_567,
@@ -461,6 +486,7 @@ def run_self_test() -> int:
         sequence=0,
         state_id=3,
         status_flags=0x07,
+        fault_flags=0x00,
         time_ms=124_000,
         latitude_raw=371_234_567,
         longitude_raw=-1_271_234_567,
@@ -485,6 +511,8 @@ def run_self_test() -> int:
     assert len(packets) == 2
     assert packets[0].sequence == 254
     assert packets[0].state_name == "ASCENT"
+    assert packets[0].fault_flags == 0x20
+    assert packets[0].fault_names == "LORA_UNAVAILABLE"
     assert packets[0].latitude_deg == -37.1234567
     assert packets[0].longitude_deg == 127.1234567
     assert packets[0].altitude_m == -12.34
@@ -514,7 +542,7 @@ def positive_int(value: str) -> int:
 def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(
-        description="Receive 33-byte COMET LoRa telemetry packets."
+        description="Receive 34-byte COMET LoRa telemetry packets."
     )
     parser.add_argument("--port", default="COM5", help="serial port (default: COM5)")
     parser.add_argument(

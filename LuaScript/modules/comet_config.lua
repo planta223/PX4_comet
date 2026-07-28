@@ -38,7 +38,8 @@ CONFIG.LORA = {
     COMMAND_HEADER    = 0x5A,
     ACK_HEADER        = 0xA6,
 
-    TELEMETRY_LENGTH = 33,  -- header(1) + sequence(1) + flight_state(1) + status_flags(1)
+    TELEMETRY_LENGTH = 34,  -- header(1) + sequence(1) + flight_state(1) + status_flags(1)
+                            -- + fault_flags(1)
                             -- + time_ms(4)
                             -- + latitude(4) + longitude(4) + altitude(4)
                             -- + velocity_n(2) + velocity_e(2) + velocity_d(2)

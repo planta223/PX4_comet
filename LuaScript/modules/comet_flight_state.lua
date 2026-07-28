@@ -318,7 +318,7 @@ end
 -- LoRa command processing
 -- ---------------------------------------------------------------------
 
-local function execute_command(command)
+local function execute_servo_command(command)
     if command == lora.COMMAND.SERVO_MAIN_LOCK then
         return servo.lock("SERVO_MAIN")
 
@@ -362,7 +362,7 @@ local function is_lock_command(command)
 end
 
 
-local function is_command_allowed(command)
+local function is_servo_command_allowed(command)
     if command == lora.COMMAND.SERVO_MAIN_LOCK
         or command == lora.COMMAND.SERVO_MAIN_RELEASE then
 
@@ -398,7 +398,52 @@ local function is_command_allowed(command)
 end
 
 
-local function process_lora_command(now)
+local function is_force_state_command(command)
+    return command == lora.COMMAND.FORCE_ASCENT
+        or command == lora.COMMAND.FORCE_DEPLOY
+        or command == lora.COMMAND.FORCE_DESCENT
+        or command == lora.COMMAND.FORCE_LANDED
+end
+
+
+local function is_force_state_command_allowed(command)
+    if command == lora.COMMAND.FORCE_ASCENT then
+        return current_state == M.STATE.READY
+
+    elseif command == lora.COMMAND.FORCE_DEPLOY then
+        return current_state == M.STATE.ASCENT
+
+    elseif command == lora.COMMAND.FORCE_DESCENT then
+        return current_state == M.STATE.ASCENT
+            or current_state == M.STATE.DEPLOY
+
+    elseif command == lora.COMMAND.FORCE_LANDED then
+        return current_state == M.STATE.DESCENT
+    end
+
+    return false
+end
+
+
+local function execute_force_state_command(command, now, sensor_data)
+    if command == lora.COMMAND.FORCE_ASCENT then
+        return enter_ascent(now, sensor_data, "remote force command")
+
+    elseif command == lora.COMMAND.FORCE_DEPLOY then
+        return enter_deploy(now, "remote force command")
+
+    elseif command == lora.COMMAND.FORCE_DESCENT then
+        return enter_descent(now, "remote force command")
+
+    elseif command == lora.COMMAND.FORCE_LANDED then
+        return enter_landed(now, "remote force command")
+    end
+
+    return false
+end
+
+
+local function process_lora_command(now, sensor_data)
     local received = lora.get_command()
 
     if received == nil then
@@ -410,7 +455,16 @@ local function process_lora_command(now)
 
     gcs:send_text(6, "COMET: [FLIGHT] Remote command received")
 
-    if not is_command_allowed(command) then
+    local force_state_command = is_force_state_command(command)
+    local allowed
+
+    if force_state_command then
+        allowed = is_force_state_command_allowed(command)
+    else
+        allowed = is_servo_command_allowed(command)
+    end
+
+    if not allowed then
         gcs:send_text(4, "COMET: [FLIGHT] Remote command rejected")
 
         lora.send_ack(
@@ -421,12 +475,20 @@ local function process_lora_command(now)
         return
     end
 
-    local ok = execute_command(command)
+    local ok
+
+    if force_state_command then
+        ok = execute_force_state_command(command, now, sensor_data)
+    else
+        ok = execute_servo_command(command)
+    end
 
     if not ok then
         gcs:send_text(3, "COMET: [FLIGHT] Remote command failed")
 
-        if is_main_release_command(command) then
+        if not force_state_command
+            and is_main_release_command(command) then
+
             set_fault(
                 M.FAULT.DEPLOY_COMMAND_FAILED,
                 "remote deploy failed"
@@ -443,10 +505,11 @@ local function process_lora_command(now)
 
     gcs:send_text(6, "COMET: [FLIGHT] Remote command succeeded")
 
-    if is_main_release_command(command) then
+    if not force_state_command
+        and is_main_release_command(command) then
+
         if current_state == M.STATE.ASCENT then
-            change_state(
-                M.STATE.DEPLOY,
+            enter_deploy(
                 now,
                 "remote deploy command"
             )
@@ -463,8 +526,9 @@ local function process_lora_command(now)
         )
     end
 
-    if command == lora.COMMAND.SERVO_MAIN_LOCK
-        or command == lora.COMMAND.LOCK_ALL then
+    if not force_state_command
+        and (command == lora.COMMAND.SERVO_MAIN_LOCK
+            or command == lora.COMMAND.LOCK_ALL) then
 
         parachute_deployed = false
     end
@@ -859,7 +923,7 @@ end
 
 
 function M.update(now, sensor_data)
-    process_lora_command(now)
+    process_lora_command(now, sensor_data)
 
     if current_state == M.STATE.READY then
         update_ready(now, sensor_data)
@@ -888,6 +952,21 @@ end
 
 function M.get_fault_flags()
     return fault_flags
+end
+
+
+function M.set_lora_available(available)
+    if available then
+        clear_fault(
+            M.FAULT.LORA_UNAVAILABLE,
+            "LoRa recovered"
+        )
+    else
+        set_fault(
+            M.FAULT.LORA_UNAVAILABLE,
+            "LoRa unavailable"
+        )
+    end
 end
 
 

@@ -1,0 +1,134 @@
+<COMET message description>
+
+현재 comet_main.lua 및 modules 내부의 gcs:send_text() 메시지를 기준으로 정리한다.
+중괄호({}) 안의 값은 실행 시 결정되는 동적 값이다.
+
+=========================================
+comet_main.lua:
+
+COMET: [MAIN] Sensor initialization failed
+COMET: [MAIN] Servo initialization failed
+COMET: [MAIN] LoRa unavailable
+COMET: [MAIN] Flight initialization failed
+COMET: [MAIN] Critical initialization failed
+COMET: [MAIN] Running without LoRa
+COMET: [MAIN] System initialized
+
+=========================================
+comet_config.lua:
+
+COMET 메시지 없음
+
+=========================================
+comet_flight_state.lua:
+
+COMET: [FLIGHT] Fault - {message}
+COMET: [FLIGHT] Fault cleared - {message}
+COMET: [FLIGHT] Invalid flight state
+COMET: [FLIGHT] {old_state} -> {new_state}
+COMET: [FLIGHT] Reason - {reason}
+COMET: [FLIGHT] Deploy transition disabled
+COMET: [FLIGHT] Deploy attempt {attempt_number}
+COMET: [FLIGHT] Deploy attempt failed
+COMET: [FLIGHT] Deploy command succeeded
+COMET: [FLIGHT] Deploy - {reason}
+COMET: [FLIGHT] Remote command received
+COMET: [FLIGHT] Remote command rejected
+COMET: [FLIGHT] Remote command failed
+COMET: [FLIGHT] Remote command succeeded
+COMET: [FLIGHT] Accel sensor stable
+COMET: [FLIGHT] Launch detection started
+COMET: [FLIGHT] Launch condition confirmed
+COMET: [FLIGHT] Accel sensor lost
+COMET: [FLIGHT] Launch fallback by accel loss
+COMET: [FLIGHT] Deploy fallback by timeout
+COMET: [FLIGHT] Descent condition detected
+COMET: [FLIGHT] Descent condition confirmed
+COMET: [FLIGHT] Retrying deploy command
+COMET: [FLIGHT] Deploy retries exhausted
+COMET: [FLIGHT] Servo operation time complete
+COMET: [FLIGHT] Landing condition detected
+COMET: [FLIGHT] Landing condition confirmed
+COMET: [FLIGHT] Flight state initialized
+COMET: [FLIGHT] Deploy output enabled
+COMET: [FLIGHT] Deploy output disabled
+COMET: [FLIGHT] Reset rejected in flight
+COMET: [FLIGHT] Flight reset failed - servo lock failed
+COMET: [FLIGHT] Flight state reset
+
+Fault message 값:
+
+accel lost during READY
+accel invalid during DESCENT
+maximum ascent time reached
+position invalid during ASCENT
+position invalid during DESCENT
+velocity invalid during ASCENT
+velocity invalid during DESCENT
+deploy command failed
+deploy retries exhausted
+remote deploy failed
+LoRa unavailable
+
+Fault cleared message 값:
+
+accel recovered
+position recovered
+velocity recovered
+deploy command recovered
+remote deploy recovered
+LoRa recovered
+
+Reason 값:
+
+acceleration confirmed
+accel loss fallback
+descent speed and altitude
+maximum ascent time
+remote force command
+remote deploy command
+deploy failed after retries
+deploy operation completed
+landing conditions confirmed
+
+Deploy reason 값:
+
+automatic
+automatic retry
+
+State 값:
+
+READY
+ASCENT
+DEPLOY
+DESCENT
+LANDED
+
+=========================================
+comet_lora.lua:
+
+COMET: [LORA] Command CRC error
+COMET: [LORA] Invalid telemetry packet length
+COMET: [LORA] Initialization failed
+COMET: [LORA] Initialized
+
+=========================================
+comet_servo.lua:
+
+COMET: [SERVO] Invalid servo name
+COMET: [SERVO] {name} is disabled
+COMET: [SERVO] Invalid {name} PWM
+COMET: [SERVO] {name} function not assigned
+COMET: [SERVO] No enabled servo
+COMET: [SERVO] Servo initialization failed
+COMET: [SERVO] Servos initialized
+
+Servo name 값:
+
+SERVO_MAIN
+SERVO_CANDIDATE
+
+=========================================
+comet_sensor.lua:
+
+COMET: [SENSOR] Sensor interface initialized

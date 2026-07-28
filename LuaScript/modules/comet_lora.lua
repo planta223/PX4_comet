@@ -196,12 +196,12 @@ local function process_command_packet()
         )
 
     if received_crc ~= expected_crc then
-        gcs:send_text(4, "COMET: LoRa command CRC error")
+        gcs:send_text(4, "COMET: [LORA] Command CRC error")
         return
     end
 
     if command < M.COMMAND.SERVO_MAIN_LOCK
-        or command > M.COMMAND.RELEASE_ALL then
+        or command > M.COMMAND.FORCE_LANDED then
 
         M.send_ack(
             sequence,
@@ -349,7 +349,7 @@ local function send_telemetry(
     if #packet ~= LORA.TELEMETRY_LENGTH - 1 then
         gcs:send_text(
             3,
-            "COMET: Invalid telemetry packet length"
+            "COMET: [LORA] Invalid telemetry packet length"
         )
         return false
     end
@@ -385,7 +385,7 @@ function M.initialize()
     port = serial:find_serial(LORA.SERIAL_INSTANCE)
 
     if port == nil then
-        gcs:send_text(3, "COMET: LoRa initialization failed")
+        gcs:send_text(3, "COMET: [LORA] Initialization failed")
         return false
     end
 
@@ -403,7 +403,7 @@ function M.initialize()
     telemetry_sequence = 0
     last_send_ms = 0
 
-    gcs:send_text(6, "COMET: LoRa initialized")
+    gcs:send_text(6, "COMET: [LORA] Initialized")
     return true
 end
 
@@ -446,7 +446,8 @@ function M.send_telemetry_if_due(
     now,
     sensor_data,
     flight_state,
-    status_flags
+    status_flags,
+    fault_flags
 )
     if port == nil then
         return false
@@ -463,7 +464,8 @@ function M.send_telemetry_if_due(
         now,
         sensor_data,
         flight_state,
-        status_flags
+        status_flags,
+        fault_flags
     )
 
     if sent then

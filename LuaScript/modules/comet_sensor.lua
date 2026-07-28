@@ -231,7 +231,7 @@ function M.initialize()
     data.attitude_valid = false
     data.acceleration_valid = false
 
-    gcs:send_text(6, "COMET: Sensor interface initialized")
+    gcs:send_text(6, "COMET: [SENSOR] Sensor interface initialized")
     return true
 end
 

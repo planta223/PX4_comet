@@ -2,6 +2,8 @@
 
 ====================================
 
+상태 종류:
+
 총 5개 상태 존재.
 READY -> ASCENT -> DEPLOY -> DESCENT -> LANDED
 
@@ -62,3 +64,16 @@ DESCENT → LANDED
 + 수직속도 절댓값 1.5m/s 이하
 + 가속도 8~12m/s²
 + 20회 연속 만족
+
+====================================
+
+fault_flags 목록:
+
+총 7개 flag 존재.
+NONE : 이상 없음 (정상판단용)
+ACCEL_SENSOR_INVALID : 가속도 이상 (회복 가능)
+POSITION_INVALID : 위치 이상 (회복 가능)
+VELOCITY_INVALID : 속도 이상 (회복 가능)
+ASCENT_TIMEOUT : 최대 상승시간 초과 (회복 불가능)
+DEPLOY_COMMAND_FAILED : 서보 사출 실패 (회복 가능)
+LORA_UNAVAILABLE : LoRa 이상 (회복 가능)

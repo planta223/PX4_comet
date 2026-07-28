@@ -34,20 +34,23 @@ local function startup()
     local lora_ok = lora.initialize()
     local flight_ok = flight.initialize(now)
 
+    -- flight.initialize()가 fault를 초기화한 뒤 LoRa 상태를 반영한다.
+    flight.set_lora_available(lora_ok)
+
     if not sensor_ok then
-        gcs:send_text(3, "COMET: Sensor initialization failed")
+        gcs:send_text(3, "COMET: [MAIN] Sensor initialization failed")
     end
 
     if not servo_ok then
-        gcs:send_text(3, "COMET: Servo initialization failed")
+        gcs:send_text(3, "COMET: [MAIN] Servo initialization failed")
     end
 
     if not lora_ok then
-        gcs:send_text(4, "COMET: LoRa unavailable")
+        gcs:send_text(4, "COMET: [MAIN] LoRa unavailable")
     end
 
     if not flight_ok then
-        gcs:send_text(3, "COMET: Flight initialization failed")
+        gcs:send_text(3, "COMET: [MAIN] Flight initialization failed")
     end
 
     -- 센서, 서보 및 상태머신 초기화 실패는 치명적 오류로 처리한다.
@@ -57,16 +60,16 @@ local function startup()
         and flight_ok
 
     if not critical_ok then
-        gcs:send_text(2, "COMET: Critical initialization failed")
+        gcs:send_text(2, "COMET: [MAIN] Critical initialization failed")
         return false
     end
 
     -- LoRa는 백업 통신이므로 초기화 실패 시에도 비행 로직은 계속 실행한다.
     if not lora_ok then
-        gcs:send_text(4, "COMET: Running without LoRa")
+        gcs:send_text(4, "COMET: [MAIN] Running without LoRa")
     end
 
-    gcs:send_text(6, "COMET: System initialized")
+    gcs:send_text(6, "COMET: [MAIN] System initialized")
     return true
 end
 
@@ -102,7 +105,8 @@ local function update()
         now,
         sensor_data,
         flight.get_state(),
-        status_flags
+        status_flags,
+        flight.get_fault_flags()
     )
 
     return update, CONFIG.UPDATE_PERIOD_MS
