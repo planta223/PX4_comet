@@ -5,7 +5,8 @@
 -- 낙하산 잠금 및 해제 동작을 수행한다.
 --
 -- 실제 PWM 출력은 ArduPilot의 SRV_Channels 인터페이스를 사용하며,
--- 개별 서보 제어와 전체 서보 동시 제어 기능을 제공한다.
+-- ENABLED=true인 서보만 초기화 및 제어한다.
+-- lock_all/release_all은 설정된 모든 서보가 아니라 활성화된 서보만 처리한다.
 -- =====================================================================
 
 local CONFIG = require("comet_config")
@@ -23,7 +24,7 @@ local function get_servo_config(name)
     local config = SERVO[name]
 
     if config == nil then
-        gcs:send_text(3, "COMET: Invalid servo name")
+        gcs:send_text(3, "COMET: [SERVO] Invalid servo name")
         return nil
     end
 
@@ -31,10 +32,21 @@ local function get_servo_config(name)
 end
 
 
+-- 지정된 서보가 활성화되어 있는지 확인한다.
+local function is_servo_enabled(name, config)
+    if config.ENABLED ~= true then
+        gcs:send_text(4, "COMET: [SERVO] " .. name .. " is disabled")
+        return false
+    end
+
+    return true
+end
+
+
 -- 지정된 서보 기능에 PWM 값을 출력한다.
 local function set_pwm(name, config, pwm)
     if type(pwm) ~= "number" then
-        gcs:send_text(3, "COMET: Invalid " .. name .. " PWM")
+        gcs:send_text(3, "COMET: [SERVO] Invalid " .. name .. " PWM")
         return false
     end
 
@@ -45,7 +57,7 @@ local function set_pwm(name, config, pwm)
     if channel == nil then
         gcs:send_text(
             3,
-            "COMET: " .. name .. " function not assigned"
+            "COMET: [SERVO] " .. name .. " function not assigned"
         )
         return false
     end
@@ -59,20 +71,55 @@ local function set_pwm(name, config, pwm)
 end
 
 
+-- 활성화된 서보에 동일한 동작을 수행한다.
+local function apply_to_enabled_servos(action)
+    local enabled_count = 0
+    local all_ok = true
+
+    -- MAIN 설정이 존재하고 활성화된 경우에만 처리한다.
+    if SERVO.SERVO_MAIN ~= nil
+        and SERVO.SERVO_MAIN.ENABLED == true then
+
+        enabled_count = enabled_count + 1
+
+        if not action("SERVO_MAIN") then
+            all_ok = false
+        end
+    end
+
+    -- CANDIDATE 설정이 존재하고 활성화된 경우에만 처리한다.
+    if SERVO.SERVO_CANDIDATE ~= nil
+        and SERVO.SERVO_CANDIDATE.ENABLED == true then
+
+        enabled_count = enabled_count + 1
+
+        if not action("SERVO_CANDIDATE") then
+            all_ok = false
+        end
+    end
+
+    if enabled_count == 0 then
+        gcs:send_text(3, "COMET: [SERVO] No enabled servo")
+        return false
+    end
+
+    return all_ok
+end
+
 -- ---------------------------------------------------------------------
 -- Public functions
 -- ---------------------------------------------------------------------
 
 function M.initialize()
-    -- 부팅 시 모든 낙하산 서보를 잠금 상태로 초기화한다.
+    -- 부팅 시 활성화된 모든 낙하산 서보를 잠금 상태로 초기화한다.
     local ok = M.lock_all()
 
     if not ok then
-        gcs:send_text(3, "COMET: Servo initialization failed")
+        gcs:send_text(3, "COMET: [SERVO] Servo initialization failed")
         return false
     end
 
-    gcs:send_text(6, "COMET: Servos initialized")
+    gcs:send_text(6, "COMET: [SERVO] Servos initialized")
     return true
 end
 
@@ -81,6 +128,10 @@ function M.lock(name)
     local config = get_servo_config(name)
 
     if config == nil then
+        return false
+    end
+
+    if not is_servo_enabled(name, config) then
         return false
     end
 
@@ -99,6 +150,10 @@ function M.release(name)
         return false
     end
 
+    if not is_servo_enabled(name, config) then
+        return false
+    end
+
     return set_pwm(
         name,
         config,
@@ -108,20 +163,12 @@ end
 
 
 function M.lock_all()
-    -- 한 서보가 실패하더라도 다른 서보 제어는 시도한다.
-    local servo1_ok = M.lock("SERVO1")
-    local servo2_ok = M.lock("SERVO2")
-
-    return servo1_ok and servo2_ok
+    return apply_to_enabled_servos(M.lock)
 end
 
 
 function M.release_all()
-    -- 한 서보가 실패하더라도 다른 서보 제어는 시도한다.
-    local servo1_ok = M.release("SERVO1")
-    local servo2_ok = M.release("SERVO2")
-
-    return servo1_ok and servo2_ok
+    return apply_to_enabled_servos(M.release)
 end
 
 

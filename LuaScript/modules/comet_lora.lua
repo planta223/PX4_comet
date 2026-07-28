@@ -39,12 +39,17 @@ local last_send_ms = 0
 -- ---------------------------------------------------------------------
 
 M.COMMAND = {
-    SERVO1_LOCK = 1,
-    SERVO1_RELEASE = 2,
-    SERVO2_LOCK = 3,
-    SERVO2_RELEASE = 4,
+    SERVO_MAIN_LOCK = 1,
+    SERVO_MAIN_RELEASE = 2,
+    SERVO_CANDIDATE_LOCK = 3,
+    SERVO_CANDIDATE_RELEASE = 4,
     LOCK_ALL = 5,
-    RELEASE_ALL = 6
+    RELEASE_ALL = 6,
+
+    FORCE_ASCENT = 7,
+    FORCE_DEPLOY = 8,
+    FORCE_DESCENT = 9,
+    FORCE_LANDED = 10
 }
 
 M.ACK_RESULT = {
@@ -195,7 +200,7 @@ local function process_command_packet()
         return
     end
 
-    if command < M.COMMAND.SERVO1_LOCK
+    if command < M.COMMAND.SERVO_MAIN_LOCK
         or command > M.COMMAND.RELEASE_ALL then
 
         M.send_ack(
@@ -276,7 +281,8 @@ local function send_telemetry(
     now,
     sensor_data,
     flight_state,
-    status_flags
+    status_flags,
+    fault_flags
 )
     if port == nil or sensor_data == nil then
         return false
@@ -288,7 +294,7 @@ local function send_telemetry(
     append_u8(packet, telemetry_sequence)
     append_u8(packet, flight_state or 0)
     append_u8(packet, status_flags or 0)
-
+    append_u8(packet, fault_flags or 0)
     append_u32(packet, now)
 
     -- latitude, longitude: deg × 1e7

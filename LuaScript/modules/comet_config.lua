@@ -7,19 +7,21 @@ local CONFIG = {}
 CONFIG.UPDATE_PERIOD_MS = 50
 
 CONFIG.SAFETY = {
-    MAX_TILT_DEG = 70.0,
+    MAX_TILT_DEG = 70.0, -- 현재 미사용
     SENSOR_TIMEOUT_MS = 1500
 }
 
 CONFIG.SERVO = {
-    SERVO1 = {
-        FUNCTION_ID = 94,  -- 확인 필요 (Mission Planner에서 확인)
+    SERVO_MAIN = {
+        ENABLED = true,    -- 현재 사용함
+        FUNCTION_ID = 94,  -- 확인 완료 (Mission Planner에서 SERVO_FUNCTION 파라미터 설정)
         LOCK_PWM = 1000,   -- 각도 검증 필요
         RELEASE_PWM = 2000 -- 각도 검증 필요
     },
 
-    SERVO2 = {
-        FUNCTION_ID = 95,  -- 확인 필요 (Mission Planner에서 확인)
+    SERVO_CANDIDATE = {
+        ENABLED = false,   -- 현재 미사용
+        FUNCTION_ID = 95,  -- 확인 완료 (Mission Planner에서 SERVO_FUNCTION 파라미터 설정)
         LOCK_PWM = 1000,   -- 각도 검증 필요
         RELEASE_PWM = 2000 -- 각도 검증 필요
     }
@@ -48,28 +50,45 @@ CONFIG.LORA = {
 
 CONFIG.TRANSITION = {
     READY_TO_ASCENT = {
-        ACCEL_THRESHOLD_MPS2 = 25.0,
-        CONFIRM_COUNT = 3
+        -- 정상 전이
+        MIN_ACCEL_MPS2 = 25.0,
+        ACCEL_CONFIRM_COUNT = 2,
+
+        -- 센서 손실 fallback 전이
+        ACCEL_PREVIOUS_STABLE_TIME_MS = 3000,
+        ACCEL_LOST_TIME_MS = 500
     },
 
-    ASCENT_TO_APOGEE = {
+    ASCENT_TO_DEPLOY = {
+        -- 지상 디버깅용
+        DEPLOY_ENABLE = false,
+
+        -- 정상 전이
         MIN_TIME_AFTER_LAUNCH_MS = 1000,
         MIN_DESCENT_SPEED_MPS = 1.0,
-        ALTITUDE_DROP_MARGIN_M = 2.0,
-        CONFIRM_COUNT = 3,
-        MAX_ASCENT_TIME_MS = 15000
+        DESCENT_SPEED_CONFIRM_COUNT = 3,
+        MIN_ALTITUDE_M = 30.0,
+
+        -- 최대시간 fallback 전이
+        MAX_TIME_AFTER_LAUNCH_MS = 3000
     },
 
-    APOGEE_TO_DESCENT = {
-        MIN_HOLD_TIME_MS = 1000
+    DEPLOY_TO_DESCENT = {
+        -- 정상 전이
+        SERVO_OPERATION_TIME_MS = 1000,
+        
+        -- 재시도
+        RETRY_INTERVAL_MS = 500,
+        MAX_RETRY_COUNT = 2 -- 실제 시도 횟수는 MAX_RETRY_COUNT + 1
     },
 
     DESCENT_TO_LANDED = {
-        MAX_RELATIVE_ALTITUDE_M = 3.0,
+        -- 정상 전이
+        MAX_ALTITUDE_M = 5.0,
         MAX_ABS_VERTICAL_SPEED_MPS = 1.5,
-        ACCEL_MIN_MPS2 = 8.0,
-        ACCEL_MAX_MPS2 = 12.0,
-        CONFIRM_COUNT = 20
+        MIN_ACCEL_MPS2 = 8.0,
+        MAX_ACCEL_MPS2 = 12.0,
+        LANDED_CONFIRM_COUNT = 40
     }
 }
 

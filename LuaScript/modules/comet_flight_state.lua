@@ -1,39 +1,47 @@
 -- =====================================================================
 -- Comet Flight State Machine
 -- =====================================================================
--- 센서 모듈이 제공하는 위치·속도·자세·가속도 정보를 이용하여
--- READY, ASCENT, APOGEE, DESCENT, LANDED, ERROR 상태를 관리한다.
+-- READY -> ASCENT -> DEPLOY -> DESCENT -> LANDED
 --
--- 또한 상태 전이 조건을 판단하고, 정점 또는 비상 상황에서 낙하산
--- 사출을 실행하며, LoRa로 수신한 서보 명령의 허용 여부를 결정한다.
+-- 비행 상태와 시스템 이상을 분리한다.
+-- 상태는 실제 비행 단계를 나타내며, 이상은 fault_flags로 관리한다.
 -- =====================================================================
 
 local CONFIG = require("comet_config")
 local servo = require("comet_servo")
 local lora = require("comet_lora")
 
-local SAFETY = CONFIG.SAFETY
+local SERVO_CONFIG = CONFIG.SERVO
 local TRANSITION = CONFIG.TRANSITION
 
 local READY_TO_ASCENT = TRANSITION.READY_TO_ASCENT
-local ASCENT_TO_APOGEE = TRANSITION.ASCENT_TO_APOGEE
-local APOGEE_TO_DESCENT = TRANSITION.APOGEE_TO_DESCENT
+local ASCENT_TO_DEPLOY = TRANSITION.ASCENT_TO_DEPLOY
+local DEPLOY_TO_DESCENT = TRANSITION.DEPLOY_TO_DESCENT
 local DESCENT_TO_LANDED = TRANSITION.DESCENT_TO_LANDED
 
 local M = {}
 
 
 -- ---------------------------------------------------------------------
--- Flight states
+-- Flight states / Fault flags
 -- ---------------------------------------------------------------------
 
 M.STATE = {
     READY = 0,
     ASCENT = 1,
-    APOGEE = 2,
+    DEPLOY = 2,
     DESCENT = 3,
-    LANDED = 4,
-    ERROR = 5
+    LANDED = 4
+}
+
+M.FAULT = {
+    NONE                  = 0x00,
+    ACCEL_SENSOR_INVALID  = 0x01,
+    POSITION_INVALID      = 0x02,
+    VELOCITY_INVALID      = 0x04,
+    ASCENT_TIMEOUT        = 0x08,
+    DEPLOY_COMMAND_FAILED = 0x10,
+    LORA_UNAVAILABLE      = 0x20
 }
 
 
@@ -42,74 +50,219 @@ M.STATE = {
 -- ---------------------------------------------------------------------
 
 local current_state = M.STATE.READY
+local fault_flags = M.FAULT.NONE
 
-local launch_time_ms = 0
 local state_enter_time_ms = 0
-local last_sensor_time_ms = 0
-
+local launch_time_ms = 0
 local maximum_altitude_m = 0.0
 
 local launch_confirm_count = 0
-local apogee_confirm_count = 0
-local landing_confirm_count = 0
+local accel_valid_start_ms = nil
+local accel_lost_start_ms = nil
+local accel_was_stable = false
+local launch_detection_message_sent = false
 
+local descent_speed_confirm_count = 0
+local descent_detection_message_sent = false
+
+local deploy_attempted = false
+local deploy_command_succeeded = false
+local deploy_command_time_ms = 0
 local parachute_deployed = false
+local deploy_retry_count = 0
+local last_deploy_attempt_ms = 0
+local deploy_disabled_message_sent = false
+
+local landed_confirm_count = 0
+local landing_detection_message_sent = false
+
 
 -- ---------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------
 
-local function change_state(new_state, now)
-    if current_state == new_state then
+local function state_name(state)
+    if state == M.STATE.READY then
+        return "READY"
+    elseif state == M.STATE.ASCENT then
+        return "ASCENT"
+    elseif state == M.STATE.DEPLOY then
+        return "DEPLOY"
+    elseif state == M.STATE.DESCENT then
+        return "DESCENT"
+    elseif state == M.STATE.LANDED then
+        return "LANDED"
+    end
+
+    return "UNKNOWN"
+end
+
+
+local function set_fault(flag, message)
+    if (fault_flags & flag) ~= 0 then
         return
     end
 
-    -- 유효성 검사
-    if new_state < M.STATE.READY
-        or new_state > M.STATE.ERROR then
+    fault_flags = fault_flags | flag
 
-        gcs:send_text(3, "COMET: Invalid flight state")
-        return
-    end
-
-    current_state = new_state
-    state_enter_time_ms = now
-
-    if new_state == M.STATE.READY then
-        gcs:send_text(6, "COMET: State READY")
-
-    elseif new_state == M.STATE.ASCENT then
-        gcs:send_text(6, "COMET: State ASCENT")
-
-    elseif new_state == M.STATE.APOGEE then
-        gcs:send_text(6, "COMET: State APOGEE")
-
-    elseif new_state == M.STATE.DESCENT then
-        gcs:send_text(6, "COMET: State DESCENT")
-
-    elseif new_state == M.STATE.LANDED then
-        gcs:send_text(6, "COMET: State LANDED")
-
-    elseif new_state == M.STATE.ERROR then
-        gcs:send_text(3, "COMET: State ERROR")
+    if message ~= nil then
+        gcs:send_text(3, "COMET: [FLIGHT] Fault - " .. message)
     end
 end
 
 
+local function clear_fault(flag, message)
+    if (fault_flags & flag) == 0 then
+        return
+    end
+
+    fault_flags = fault_flags & (~flag)
+
+    if message ~= nil then
+        gcs:send_text(
+            6,
+            "COMET: [FLIGHT] Fault cleared - " .. message
+        )
+    end
+end
+
+
+local function change_state(new_state, now, reason)
+    if current_state == new_state then
+        return true
+    end
+
+    if new_state < M.STATE.READY
+        or new_state > M.STATE.LANDED then
+
+        gcs:send_text(3, "COMET: [FLIGHT] Invalid flight state")
+        return false
+    end
+
+    local old_state = current_state
+
+    current_state = new_state
+    state_enter_time_ms = now
+
+    gcs:send_text(
+        6,
+        "COMET: [FLIGHT] "
+            .. state_name(old_state)
+            .. " -> "
+            .. state_name(new_state)
+    )
+
+    if reason ~= nil then
+        gcs:send_text(6, "COMET: [FLIGHT] Reason - " .. reason)
+    end
+
+    return true
+end
+
+
+local function enter_ascent(now, sensor_data, reason)
+    launch_time_ms = now
+
+    launch_confirm_count = 0
+    descent_speed_confirm_count = 0
+    landed_confirm_count = 0
+
+    launch_detection_message_sent = false
+    descent_detection_message_sent = false
+    landing_detection_message_sent = false
+
+    if sensor_data ~= nil
+        and sensor_data.position_valid then
+
+        maximum_altitude_m = sensor_data.altitude
+    else
+        maximum_altitude_m = 0.0
+    end
+
+    return change_state(M.STATE.ASCENT, now, reason)
+end
+
+local function enter_deploy(now, reason)
+    deploy_attempted = false
+    deploy_command_succeeded = false
+    deploy_command_time_ms = 0
+    parachute_deployed = false
+    deploy_retry_count = 0
+    last_deploy_attempt_ms = 0
+
+    return change_state(
+        M.STATE.DEPLOY,
+        now,
+        reason
+    )
+end
+
+local function enter_descent(now, reason)
+    landed_confirm_count = 0
+    landing_detection_message_sent = false
+
+    return change_state(
+        M.STATE.DESCENT,
+        now,
+        reason
+    )
+end
+
+local function request_deploy(now, reason)
+    if not ASCENT_TO_DEPLOY.DEPLOY_ENABLE then
+        if not deploy_disabled_message_sent then
+            deploy_disabled_message_sent = true
+
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Deploy transition disabled"
+            )
+        end
+
+        return false
+    end
+
+    return enter_deploy(now, reason)
+end
+
+local function enter_landed(now, reason)
+    landed_confirm_count = 0
+    landing_detection_message_sent = false
+
+    return change_state(
+        M.STATE.LANDED,
+        now,
+        reason
+    )
+end
+
 local function reset_state(now)
     current_state = M.STATE.READY
+    fault_flags = M.FAULT.NONE
 
-    launch_time_ms = 0
     state_enter_time_ms = now
-    last_sensor_time_ms = now
-
+    launch_time_ms = 0
     maximum_altitude_m = 0.0
 
     launch_confirm_count = 0
-    apogee_confirm_count = 0
-    landing_confirm_count = 0
+    accel_valid_start_ms = nil
+    accel_lost_start_ms = nil
+    accel_was_stable = false
+    launch_detection_message_sent = false
 
+    descent_speed_confirm_count = 0
+    descent_detection_message_sent = false
+
+    deploy_attempted = false
+    deploy_command_succeeded = false
+    deploy_command_time_ms = 0
     parachute_deployed = false
+    deploy_retry_count = 0
+    last_deploy_attempt_ms = 0
+    deploy_disabled_message_sent = false
+
+    landed_confirm_count = 0
+    landing_detection_message_sent = false
 end
 
 
@@ -117,20 +270,45 @@ end
 -- Parachute deployment
 -- ---------------------------------------------------------------------
 
-local function deploy_parachute()
-    if parachute_deployed then
+local function deploy_parachute(now, reason)
+    if deploy_command_succeeded then
         return true
     end
+
+    last_deploy_attempt_ms = now
+
+    gcs:send_text(
+        6,
+        "COMET: [FLIGHT] Deploy attempt "
+            .. tostring(deploy_retry_count + 1)
+    )
 
     local ok = servo.release_all()
 
     if not ok then
-        gcs:send_text(3, "COMET: Parachute deployment failed")
+        set_fault(
+            M.FAULT.DEPLOY_COMMAND_FAILED,
+            "deploy command failed"
+        )
+
+        gcs:send_text(3, "COMET: [FLIGHT] Deploy attempt failed")
         return false
     end
 
+    deploy_command_succeeded = true
+    deploy_command_time_ms = now
     parachute_deployed = true
-    gcs:send_text(6, "COMET: Parachute deployed")
+
+    clear_fault(
+        M.FAULT.DEPLOY_COMMAND_FAILED,
+        "deploy command recovered"
+    )
+
+    gcs:send_text(6, "COMET: [FLIGHT] Deploy command succeeded")
+
+    if reason ~= nil then
+        gcs:send_text(6, "COMET: [FLIGHT] Deploy - " .. reason)
+    end
 
     return true
 end
@@ -141,17 +319,17 @@ end
 -- ---------------------------------------------------------------------
 
 local function execute_command(command)
-    if command == lora.COMMAND.SERVO1_LOCK then
-        return servo.lock("SERVO1")
+    if command == lora.COMMAND.SERVO_MAIN_LOCK then
+        return servo.lock("SERVO_MAIN")
 
-    elseif command == lora.COMMAND.SERVO1_RELEASE then
-        return servo.release("SERVO1")
+    elseif command == lora.COMMAND.SERVO_MAIN_RELEASE then
+        return servo.release("SERVO_MAIN")
 
-    elseif command == lora.COMMAND.SERVO2_LOCK then
-        return servo.lock("SERVO2")
+    elseif command == lora.COMMAND.SERVO_CANDIDATE_LOCK then
+        return servo.lock("SERVO_CANDIDATE")
 
-    elseif command == lora.COMMAND.SERVO2_RELEASE then
-        return servo.release("SERVO2")
+    elseif command == lora.COMMAND.SERVO_CANDIDATE_RELEASE then
+        return servo.release("SERVO_CANDIDATE")
 
     elseif command == lora.COMMAND.LOCK_ALL then
         return servo.lock_all()
@@ -164,31 +342,63 @@ local function execute_command(command)
 end
 
 
-local function is_command_allowed(command)
-    -- 비행 중 서보 잠금은 금지
-    if command == lora.COMMAND.SERVO1_LOCK
-        or command == lora.COMMAND.SERVO2_LOCK
-        or command == lora.COMMAND.LOCK_ALL then
+local function is_release_command(command)
+    return command == lora.COMMAND.SERVO_MAIN_RELEASE
+        or command == lora.COMMAND.SERVO_CANDIDATE_RELEASE
+        or command == lora.COMMAND.RELEASE_ALL
+end
 
+
+local function is_main_release_command(command)
+    return command == lora.COMMAND.SERVO_MAIN_RELEASE
+        or command == lora.COMMAND.RELEASE_ALL
+end
+
+
+local function is_lock_command(command)
+    return command == lora.COMMAND.SERVO_MAIN_LOCK
+        or command == lora.COMMAND.SERVO_CANDIDATE_LOCK
+        or command == lora.COMMAND.LOCK_ALL
+end
+
+
+local function is_command_allowed(command)
+    if command == lora.COMMAND.SERVO_MAIN_LOCK
+        or command == lora.COMMAND.SERVO_MAIN_RELEASE then
+
+        if SERVO_CONFIG.SERVO_MAIN == nil
+            or SERVO_CONFIG.SERVO_MAIN.ENABLED ~= true then
+
+            return false
+        end
+    end
+
+    if command == lora.COMMAND.SERVO_CANDIDATE_LOCK
+        or command == lora.COMMAND.SERVO_CANDIDATE_RELEASE then
+
+        if SERVO_CONFIG.SERVO_CANDIDATE == nil
+            or SERVO_CONFIG.SERVO_CANDIDATE.ENABLED ~= true then
+
+            return false
+        end
+    end
+
+    if is_lock_command(command) then
         return current_state == M.STATE.READY
             or current_state == M.STATE.LANDED
     end
 
-    -- READY 상태에서는 오작동 방지를 위해 원격 사출 금지
-    if command == lora.COMMAND.SERVO1_RELEASE
-        or command == lora.COMMAND.SERVO2_RELEASE
-        or command == lora.COMMAND.RELEASE_ALL then
-
-        return current_state == M.STATE.APOGEE
+    if is_release_command(command) then
+        return current_state == M.STATE.ASCENT
+            or current_state == M.STATE.DEPLOY
             or current_state == M.STATE.DESCENT
-            or current_state == M.STATE.ERROR
     end
 
     return false
 end
 
 
-local function process_lora_command()
+local function process_lora_command(now)
     local received = lora.get_command()
 
     if received == nil then
@@ -198,7 +408,11 @@ local function process_lora_command()
     local sequence = received.sequence
     local command = received.command
 
+    gcs:send_text(6, "COMET: [FLIGHT] Remote command received")
+
     if not is_command_allowed(command) then
+        gcs:send_text(4, "COMET: [FLIGHT] Remote command rejected")
+
         lora.send_ack(
             sequence,
             command,
@@ -209,24 +423,57 @@ local function process_lora_command()
 
     local ok = execute_command(command)
 
-    if ok then
-        -- 서보 1, 2 모두 RELEASE 상태일 때 낙하산 전개 판단
-        if command == lora.COMMAND.RELEASE_ALL then
-            parachute_deployed = true
+    if not ok then
+        gcs:send_text(3, "COMET: [FLIGHT] Remote command failed")
+
+        if is_main_release_command(command) then
+            set_fault(
+                M.FAULT.DEPLOY_COMMAND_FAILED,
+                "remote deploy failed"
+            )
         end
 
         lora.send_ack(
             sequence,
             command,
-            lora.ACK_RESULT.OK
-        )
-    else
-        lora.send_ack(
-            sequence,
-            command,
             lora.ACK_RESULT.EXECUTION_FAILED
         )
+        return
     end
+
+    gcs:send_text(6, "COMET: [FLIGHT] Remote command succeeded")
+
+    if is_main_release_command(command) then
+        if current_state == M.STATE.ASCENT then
+            change_state(
+                M.STATE.DEPLOY,
+                now,
+                "remote deploy command"
+            )
+        end
+
+        parachute_deployed = true
+        deploy_attempted = true
+        deploy_command_succeeded = true
+        deploy_command_time_ms = now
+
+        clear_fault(
+            M.FAULT.DEPLOY_COMMAND_FAILED,
+            "remote deploy recovered"
+        )
+    end
+
+    if command == lora.COMMAND.SERVO_MAIN_LOCK
+        or command == lora.COMMAND.LOCK_ALL then
+
+        parachute_deployed = false
+    end
+
+    lora.send_ack(
+        sequence,
+        command,
+        lora.ACK_RESULT.OK
+    )
 end
 
 
@@ -234,136 +481,323 @@ end
 -- Sensor validity
 -- ---------------------------------------------------------------------
 
--- READY 상태에서는 가속도값 이용
-local function ready_sensor_is_valid(sensor_data)
+local function acceleration_is_valid(sensor_data)
     return sensor_data ~= nil
         and sensor_data.acceleration_valid
 end
 
--- ASCENT 상태에서는 위치·속도값 이용
-local function ascent_sensor_is_valid(sensor_data)
+
+local function position_is_valid(sensor_data)
     return sensor_data ~= nil
         and sensor_data.position_valid
+end
+
+
+local function velocity_is_valid(sensor_data)
+    return sensor_data ~= nil
         and sensor_data.velocity_valid
 end
 
--- DESCENT 상태에서는 위치·속도, 가속도 값 이용
-local function descent_sensor_is_valid(sensor_data)
-    return sensor_data ~= nil
-        and sensor_data.position_valid
-        and sensor_data.velocity_valid
-        and sensor_data.acceleration_valid
-end
 
 -- ---------------------------------------------------------------------
 -- State handlers
 -- ---------------------------------------------------------------------
--- 상세한 사항은 flight_state_description.txt 참고
 
 local function update_ready(now, sensor_data)
-    if not ready_sensor_is_valid(sensor_data) then
-        launch_confirm_count = 0
-        return
+    local accel_valid = acceleration_is_valid(sensor_data)
+
+    if accel_valid then
+        accel_lost_start_ms = nil
+
+        if accel_valid_start_ms == nil then
+            accel_valid_start_ms = now
+        end
+
+        if now - accel_valid_start_ms
+            >= READY_TO_ASCENT.ACCEL_PREVIOUS_STABLE_TIME_MS then
+
+            if not accel_was_stable then
+                accel_was_stable = true
+                gcs:send_text(6, "COMET: [FLIGHT] Accel sensor stable")
+            end
+        end
+    else
+        accel_valid_start_ms = nil
     end
 
-    if sensor_data.total_acceleration
-        >= READY_TO_ASCENT.ACCEL_THRESHOLD_MPS2 then
+    if accel_valid
+        and sensor_data.total_acceleration
+            >= READY_TO_ASCENT.MIN_ACCEL_MPS2 then
+
+        if launch_confirm_count == 0
+            and not launch_detection_message_sent then
+
+            launch_detection_message_sent = true
+            gcs:send_text(6, "COMET: [FLIGHT] Launch detection started")
+        end
 
         launch_confirm_count = launch_confirm_count + 1
     else
         launch_confirm_count = 0
+        launch_detection_message_sent = false
     end
 
-    if launch_confirm_count >= READY_TO_ASCENT.CONFIRM_COUNT then
-        launch_time_ms = now
-        last_sensor_time_ms = now
+    if launch_confirm_count
+        >= READY_TO_ASCENT.ACCEL_CONFIRM_COUNT then
 
-        if sensor_data.position_valid then
-            maximum_altitude_m = sensor_data.altitude
-        else
-            maximum_altitude_m = 0.0
+        gcs:send_text(6, "COMET: [FLIGHT] Launch condition confirmed")
+        enter_ascent(now, sensor_data, "acceleration confirmed")
+        return
+    end
+
+    if accel_was_stable and not accel_valid then
+        if accel_lost_start_ms == nil then
+            accel_lost_start_ms = now
+            gcs:send_text(4, "COMET: [FLIGHT] Accel sensor lost")
         end
 
-        launch_confirm_count = 0
-        apogee_confirm_count = 0
-        landing_confirm_count = 0
+        if now - accel_lost_start_ms
+            >= READY_TO_ASCENT.ACCEL_LOST_TIME_MS then
 
-        change_state(M.STATE.ASCENT, now)
+            set_fault(
+                M.FAULT.ACCEL_SENSOR_INVALID,
+                "accel lost during READY"
+            )
+
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Launch fallback by accel loss"
+            )
+
+            enter_ascent(now, sensor_data, "accel loss fallback")
+        end
     end
 end
 
+
 local function update_ascent(now, sensor_data)
-    if not ascent_sensor_is_valid(sensor_data) then
+    local elapsed_ms = now - launch_time_ms
+
+    if acceleration_is_valid(sensor_data) then
+        clear_fault(
+            M.FAULT.ACCEL_SENSOR_INVALID,
+            "accel recovered"
+        )
+    end
+
+    if elapsed_ms
+        >= ASCENT_TO_DEPLOY.MAX_TIME_AFTER_LAUNCH_MS then
+
+        set_fault(
+            M.FAULT.ASCENT_TIMEOUT,
+            "maximum ascent time reached"
+        )
+
+        gcs:send_text(4, "COMET: [FLIGHT] Deploy fallback by timeout")
+
+        request_deploy(
+            now,
+            "maximum ascent time"
+        )
+        return
+    end
+
+    local position_valid = position_is_valid(sensor_data)
+    local velocity_valid = velocity_is_valid(sensor_data)
+
+    if not position_valid then
+        set_fault(
+            M.FAULT.POSITION_INVALID,
+            "position invalid during ASCENT"
+        )
+    else
+        clear_fault(
+            M.FAULT.POSITION_INVALID,
+            "position recovered"
+        )
+    end
+
+    if not velocity_valid then
+        set_fault(
+            M.FAULT.VELOCITY_INVALID,
+            "velocity invalid during ASCENT"
+        )
+    else
+        clear_fault(
+            M.FAULT.VELOCITY_INVALID,
+            "velocity recovered"
+        )
+    end
+
+    if not position_valid or not velocity_valid then
+        descent_speed_confirm_count = 0
+        descent_detection_message_sent = false
         return
     end
 
     if sensor_data.altitude > maximum_altitude_m then
         maximum_altitude_m = sensor_data.altitude
-        apogee_confirm_count = 0
     end
 
     local minimum_time_passed =
-        now - launch_time_ms
-            >= ASCENT_TO_APOGEE.MIN_TIME_AFTER_LAUNCH_MS
+        elapsed_ms
+            >= ASCENT_TO_DEPLOY.MIN_TIME_AFTER_LAUNCH_MS
 
     local descending =
         sensor_data.velocity_d
-            >= ASCENT_TO_APOGEE.MIN_DESCENT_SPEED_MPS
+            >= ASCENT_TO_DEPLOY.MIN_DESCENT_SPEED_MPS
 
-    local altitude_dropped =
+    local altitude_high_enough =
         sensor_data.altitude
-            <= maximum_altitude_m
-                - ASCENT_TO_APOGEE.ALTITUDE_DROP_MARGIN_M
+            >= ASCENT_TO_DEPLOY.MIN_ALTITUDE_M
 
     if minimum_time_passed
         and descending
-        and altitude_dropped then
+        and altitude_high_enough then
 
-        apogee_confirm_count = apogee_confirm_count + 1
+        if descent_speed_confirm_count == 0
+            and not descent_detection_message_sent then
+
+            descent_detection_message_sent = true
+            gcs:send_text(6, "COMET: [FLIGHT] Descent condition detected")
+        end
+
+        descent_speed_confirm_count =
+            descent_speed_confirm_count + 1
     else
-        apogee_confirm_count = 0
+        descent_speed_confirm_count = 0
+        descent_detection_message_sent = false
     end
 
-    local ascent_timeout =
-        now - launch_time_ms
-            >= ASCENT_TO_APOGEE.MAX_ASCENT_TIME_MS
+    if descent_speed_confirm_count
+        >= ASCENT_TO_DEPLOY.DESCENT_SPEED_CONFIRM_COUNT then
 
-    if apogee_confirm_count
-        >= ASCENT_TO_APOGEE.CONFIRM_COUNT
-        or ascent_timeout then
+        gcs:send_text(6, "COMET: [FLIGHT] Descent condition confirmed")
 
-        change_state(M.STATE.APOGEE, now)
+        request_deploy(
+            now,
+            "descent speed and altitude"
+        )
     end
 end
 
 
-local function update_apogee(now)
-    if not parachute_deployed then
-        local ok = deploy_parachute()
+local function update_deploy(now)
+    if not deploy_command_succeeded then
+        if not deploy_attempted then
+            deploy_attempted = true
+            deploy_parachute(now, "automatic")
 
-        if not ok then
-            change_state(M.STATE.ERROR, now)
-            return
+        elseif deploy_retry_count
+            < DEPLOY_TO_DESCENT.MAX_RETRY_COUNT
+            and now - last_deploy_attempt_ms
+                >= DEPLOY_TO_DESCENT.RETRY_INTERVAL_MS then
+
+            deploy_retry_count = deploy_retry_count + 1
+
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Retrying deploy command"
+            )
+
+            deploy_parachute(now, "automatic retry")
         end
     end
 
-    if now - state_enter_time_ms
-        >= APOGEE_TO_DESCENT.MIN_HOLD_TIME_MS then
+    local retries_exhausted =
+        deploy_attempted
+        and not deploy_command_succeeded
+        and deploy_retry_count
+            >= DEPLOY_TO_DESCENT.MAX_RETRY_COUNT
 
-        change_state(M.STATE.DESCENT, now)
+    if retries_exhausted then
+        set_fault(
+            M.FAULT.DEPLOY_COMMAND_FAILED,
+            "deploy retries exhausted"
+        )
+
+        gcs:send_text(
+            3,
+            "COMET: [FLIGHT] Deploy retries exhausted"
+        )
+
+        enter_descent(
+            now,
+            "deploy failed after retries"
+        )
+        return
+    end
+
+    if not deploy_command_succeeded then
+        return
+    end
+
+    if now - deploy_command_time_ms
+        >= DEPLOY_TO_DESCENT.SERVO_OPERATION_TIME_MS then
+
+        gcs:send_text(6, "COMET: [FLIGHT] Servo operation time complete")
+
+        enter_descent(
+            now,
+            "deploy operation completed"
+        )
     end
 end
 
 
 local function update_descent(now, sensor_data)
-    if not descent_sensor_is_valid(sensor_data) then
-        landing_confirm_count = 0
+    local position_valid = position_is_valid(sensor_data)
+    local velocity_valid = velocity_is_valid(sensor_data)
+    local accel_valid = acceleration_is_valid(sensor_data)
+
+    if not position_valid then
+        set_fault(
+            M.FAULT.POSITION_INVALID,
+            "position invalid during DESCENT"
+        )
+    else
+        clear_fault(
+            M.FAULT.POSITION_INVALID,
+            "position recovered"
+        )
+    end
+
+    if not velocity_valid then
+        set_fault(
+            M.FAULT.VELOCITY_INVALID,
+            "velocity invalid during DESCENT"
+        )
+    else
+        clear_fault(
+            M.FAULT.VELOCITY_INVALID,
+            "velocity recovered"
+        )
+    end
+
+    if not accel_valid then
+        set_fault(
+            M.FAULT.ACCEL_SENSOR_INVALID,
+            "accel invalid during DESCENT"
+        )
+    else
+        clear_fault(
+            M.FAULT.ACCEL_SENSOR_INVALID,
+            "accel recovered"
+        )
+    end
+
+    if not position_valid
+        or not velocity_valid
+        or not accel_valid then
+
+        landed_confirm_count = 0
+        landing_detection_message_sent = false
         return
     end
 
     local altitude_low =
         sensor_data.altitude
-            <= DESCENT_TO_LANDED.MAX_RELATIVE_ALTITUDE_M
+            <= DESCENT_TO_LANDED.MAX_ALTITUDE_M
 
     local vertical_speed_low =
         math.abs(sensor_data.velocity_d)
@@ -371,30 +805,36 @@ local function update_descent(now, sensor_data)
 
     local acceleration_stable =
         sensor_data.total_acceleration
-            >= DESCENT_TO_LANDED.ACCEL_MIN_MPS2
+            >= DESCENT_TO_LANDED.MIN_ACCEL_MPS2
         and sensor_data.total_acceleration
-            <= DESCENT_TO_LANDED.ACCEL_MAX_MPS2
+            <= DESCENT_TO_LANDED.MAX_ACCEL_MPS2
 
     if altitude_low
         and vertical_speed_low
         and acceleration_stable then
 
-        landing_confirm_count = landing_confirm_count + 1
+        if landed_confirm_count == 0
+            and not landing_detection_message_sent then
+
+            landing_detection_message_sent = true
+            gcs:send_text(6, "COMET: [FLIGHT] Landing condition detected")
+        end
+
+        landed_confirm_count = landed_confirm_count + 1
     else
-        landing_confirm_count = 0
+        landed_confirm_count = 0
+        landing_detection_message_sent = false
     end
 
-    if landing_confirm_count
-        >= DESCENT_TO_LANDED.CONFIRM_COUNT then
+    if landed_confirm_count
+        >= DESCENT_TO_LANDED.LANDED_CONFIRM_COUNT then
 
-        change_state(M.STATE.LANDED, now)
-    end
-end
+        gcs:send_text(6, "COMET: [FLIGHT] Landing condition confirmed")
 
-
-local function update_error()
-    if not parachute_deployed then
-        deploy_parachute()
+        enter_landed(
+            now,
+            "landing conditions confirmed"
+        )
     end
 end
 
@@ -406,37 +846,35 @@ end
 function M.initialize(now)
     reset_state(now or 0)
 
-    gcs:send_text(6, "COMET: Flight state initialized")
+    gcs:send_text(6, "COMET: [FLIGHT] Flight state initialized")
+
+    if ASCENT_TO_DEPLOY.DEPLOY_ENABLE then
+        gcs:send_text(6, "COMET: [FLIGHT] Deploy output enabled")
+    else
+        gcs:send_text(4, "COMET: [FLIGHT] Deploy output disabled")
+    end
+
     return true
 end
 
 
 function M.update(now, sensor_data)
-    -- LoRa 명령은 센서 상태와 관계없이 우선 처리
-    process_lora_command()
+    process_lora_command(now)
 
     if current_state == M.STATE.READY then
         update_ready(now, sensor_data)
 
     elseif current_state == M.STATE.ASCENT then
-        if ascent_sensor_is_valid(sensor_data) then
-            last_sensor_time_ms = now
-            update_ascent(now, sensor_data)
+        update_ascent(now, sensor_data)
 
-        elseif now - last_sensor_time_ms
-            >= SAFETY.SENSOR_TIMEOUT_MS then
-
-            change_state(M.STATE.ERROR, now)
-        end
-
-    elseif current_state == M.STATE.APOGEE then
-        update_apogee(now)
+    elseif current_state == M.STATE.DEPLOY then
+        update_deploy(now)
 
     elseif current_state == M.STATE.DESCENT then
         update_descent(now, sensor_data)
 
-    elseif current_state == M.STATE.ERROR then
-        update_error()
+    elseif current_state == M.STATE.LANDED then
+        -- LANDED 상태 유지
     end
 
     return true
@@ -445,6 +883,16 @@ end
 
 function M.get_state()
     return current_state
+end
+
+
+function M.get_fault_flags()
+    return fault_flags
+end
+
+
+function M.has_fault()
+    return fault_flags ~= M.FAULT.NONE
 end
 
 
@@ -462,19 +910,23 @@ function M.reset(now)
     if current_state ~= M.STATE.READY
         and current_state ~= M.STATE.LANDED then
 
+        gcs:send_text(4, "COMET: [FLIGHT] Reset rejected in flight")
         return false
     end
 
     local ok = servo.lock_all()
 
     if not ok then
-        gcs:send_text(3, "COMET: Flight state reset failed")
+        gcs:send_text(
+            3,
+            "COMET: [FLIGHT] Flight reset failed - servo lock failed"
+        )
         return false
     end
 
     reset_state(now or 0)
 
-    gcs:send_text(6, "COMET: Flight state reset")
+    gcs:send_text(6, "COMET: [FLIGHT] Flight state reset")
     return true
 end
 

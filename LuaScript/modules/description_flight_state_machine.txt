@@ -1,0 +1,64 @@
+<description_flight_state_machine>
+
+====================================
+
+총 5개 상태 존재.
+READY -> ASCENT -> DEPLOY -> DESCENT -> LANDED
+
+시스템 이상은 별도 ERROR 상태가 아니라 fault_flags로 관리한다.
+
+====================================
+
+상태 전이 조건:
+
+READY → ASCENT
+- 정상 전이: 가속도 임계값을 지정 횟수만큼 연속 만족
+- fallback 전이: 가속도 센서가 일정 시간 정상 상태였고, 이후 일정 시간 연속 비정상(손실)
+- 원격 강제전이: 별도 LoRa 명령으로 처리
+
+ASCENT → DEPLOY
+*** DEPLOY_ENABLE = false 일 시 DEPLOY 상태로 정상 및 fallback 전이되지 않음. 단, LoRa 명령으로는 전이 가능. ***
+- 정상 전이: 발사 후 최소시간 경과
+              + 현재 하강속도 조건 연속 만족
+              + 최소 상대고도 만족
+- fallback 전이: 최대 상승시간 초과
+- 원격 강제전이: 별도 LoRa 명령으로 처리
+
+DEPLOY → DESCENT
+- 정상 전이: 서보 RELEASE 명령 성공
+              + 명령 후 최소 동작시간 경과
+- fallback 전이: 설정 횟수만큼 서보 동작 재시도 후에도 실패
+- 원격 강제전이: 별도 LoRa 명령으로 처리
+DESCENT → LANDED
+- 정상 전이: 저고도
+              + 낮은 수직속도
+              + 안정된 가속도
+              + 일정 횟수 연속 만족
+- 원격 강제전이: 별도 LoRa 명령으로 처리
+
+====================================
+
+상태 전이 조건 상세 수치 (계속 변경될 예정) :
+
+READY → ASCENT
+가속도 임계값 2회 연속 만족
+또는
+이전에 3초간 센서 정상 + 이후 500ms간 센서 손실
+
+ASCENT → DEPLOY
+*** DEPLOY_ENABLE = false 일 시 DEPLOY 상태로 정상 및 fallback 전이되지 않음. 단, LoRa 명령으로는 전이 가능. ***
+발사 후 1초 경과
++ 하강속도 1m/s 이상 3회 연속
++ 상대고도 30m 이상
+또는
+발사 후 15초 초과
+
+DEPLOY → DESCENT
+서보 RELEASE 명령 성공
++ 명령 후 1초 경과
+
+DESCENT → LANDED
+상대고도 5m 이하
++ 수직속도 절댓값 1.5m/s 이하
++ 가속도 8~12m/s²
++ 20회 연속 만족
