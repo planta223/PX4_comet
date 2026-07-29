@@ -1,0 +1,23 @@
+{
+  "expected_period_ms": 300.0,
+  "packet_length_bytes": 34,
+  "received_count": 39,
+  "missed_count": 0,
+  "duplicate_count": 0,
+  "out_of_order_count": 0,
+  "total_expected_count": 39,
+  "loss_rate_percent": 0.0,
+  "first_receive_time": "2026-07-28T23:25:08.764214+09:00",
+  "last_receive_time": "2026-07-28T23:25:20.288652+09:00",
+  "duration_s": 11.82799999999952,
+  "average_interval_ms": 303.0526315789374,
+  "minimum_interval_ms": 281.00000000085856,
+  "maximum_interval_ms": 328.0000000013388,
+  "interval_stddev_ms": 13.519863298190643,
+  "average_packet_rate_hz": 3.2972607372338167,
+  "average_payload_rate_Bps": 112.10686506594976,
+  "estimated_required_payload_rate_Bps": 113.33333333333333,
+  "crc_errors": 0,
+  "total_serial_bytes": 1326,
+  "discarded_resync_bytes": 0
+}

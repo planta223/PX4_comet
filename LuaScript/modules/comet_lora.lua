@@ -365,6 +365,13 @@ end
 
 
 local function get_telemetry_period(flight_state)
+    if LORA.TEST ~= nil
+        and LORA.TEST.ENABLED == true
+        and LORA.TEST.PERIOD_MS ~= nil then
+
+        return LORA.TEST.PERIOD_MS
+    end
+
     -- 비행 중에는 빠른 주기를 사용한다.
     if flight_state == 1
         or flight_state == 2

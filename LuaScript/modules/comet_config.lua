@@ -29,10 +29,16 @@ CONFIG.SERVO = {
 
 CONFIG.LORA = {
     SERIAL_INSTANCE = 0,     -- SERIALx_PROTOCOL이 28인 포트들을 찾는다. (Mission Planner에서 LORA 28, SiK 2 설정)
-    BAUD = 57600,
+    BAUD = 9600,
 
     FAST_PERIOD_MS   = 250,  -- 빠른 전송 주기 (예: 비행 중)
     NORMAL_PERIOD_MS = 1000, -- 일반 전송 주기 (예: 지상에서)
+
+    -- 지상 LoRa 처리량/손실률 시험용 고정 텔레메트리 주기
+    TEST = {
+        ENABLED = true,
+        PERIOD_MS = 275
+    },
 
     TELEMETRY_HEADER  = 0xA5,
     COMMAND_HEADER    = 0x5A,
