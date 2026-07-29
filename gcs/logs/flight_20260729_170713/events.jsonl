@@ -1,0 +1,41 @@
+{"ts": 1785312433.7565522, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_170713", "trigger": "reboot"}
+{"ts": 1785312434.0374885, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1785312436.7533894, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785312437.4731693, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312438.1340444, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312438.1340444, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785312438.1340444, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785312438.1340444, "type": "rocket_state_transition", "from_state": "LANDED", "to_state": "READY"}
+{"ts": 1785312438.1496742, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785312438.6228373, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 4.866285085678101, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1785312438.6228373, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785312438.6838942, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1785312438.7264414, "type": "message", "text": "COMET: Servos initialized", "severity": 6}
+{"ts": 1785312438.7264414, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1785312438.7264414, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1785312438.7264414, "type": "message", "text": "COMET: Deploy output enabled", "severity": 6}
+{"ts": 1785312438.7264414, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1785312438.7333755, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785312438.7333755, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785312440.2859306, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785312440.2859306, "type": "message", "text": "EKF3 IMU1 initialised", "severity": 6}
+{"ts": 1785312441.8447764, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785312441.8447764, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785312441.8447764, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1785312441.8614302, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785312441.8614302, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785312442.6992407, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312443.3690486, "type": "servo_command", "channel": "all", "pwm_key": "pwm_min", "path": "sik"}
+{"ts": 1785312443.4255843, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312443.9460773, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312445.5378737, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785312445.5378737, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785312449.772416, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785312458.2394495, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785312458.668075, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785312459.157062, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785312459.204952, "type": "message", "text": "COMET: Remote command received", "severity": 6}
+{"ts": 1785312459.204952, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785312459.204952, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785312459.204952, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785312459.3069649, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}

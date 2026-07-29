@@ -11,6 +11,16 @@ CONFIG.SAFETY = {
     SENSOR_TIMEOUT_MS = 1500
 }
 
+-- 이건 추후 삭제
+CONFIG.DEBUG = {
+    -- true:
+    -- 비행 상태와 관계없이 LoRa 서보 LOCK/RELEASE 명령 허용
+    --
+    -- false:
+    -- 정상 비행 상태 제한 적용
+    SERVO_COMMAND_BYPASS_STATE = true
+}
+
 CONFIG.SERVO = {
     SERVO_MAIN = {
         ENABLED = true,    -- 현재 사용함

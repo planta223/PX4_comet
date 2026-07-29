@@ -1,0 +1,109 @@
+{"ts": 1784895213.9892452, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260724_211333", "trigger": "ascent"}
+{"ts": 1784895214.5034182, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895215.5062172, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1784895215.5062172, "type": "message", "text": "EKF3 IMU1 initialised", "severity": 6}
+{"ts": 1784895217.0179515, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1784895217.0179515, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1784895217.0179515, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1784895217.0179515, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1784895220.5205169, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1784895220.5647645, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1784895224.5409427, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1784895240.1463242, "type": "message", "text": "EKF3 IMU0 origin set", "severity": 6}
+{"ts": 1784895240.6490457, "type": "message", "text": "Field Elevation Set: 9m", "severity": 6}
+{"ts": 1784895240.6490457, "type": "message", "text": "EKF3 IMU1 origin set", "severity": 6}
+{"ts": 1784895244.175736, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895275.338625, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895280.35449, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}
+{"ts": 1784895280.3656795, "type": "message", "text": "AHRS: EKF3 active", "severity": 6}
+{"ts": 1784895281.3670156, "type": "message", "text": "EKF3 IMU1 is using GPS", "severity": 6}
+{"ts": 1784895306.527233, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895336.683871, "type": "gcs_ready_authorized"}
+{"ts": 1784895337.2498868, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895368.450681, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784895371.4578204, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784895371.499346, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784895375.489138, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784895376.523602, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784895383.5749996, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784895470.902511, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895470.9781375, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895483.3415878, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895484.933631, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895493.4888237, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895547.908147, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895550.9063783, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895553.4714038, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895556.7400448, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895579.0018752, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895586.2640116, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895592.4330275, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895601.754094, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895602.7852056, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895612.6154225, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895613.409794, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895640.1611545, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895640.9596999, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895670.0164406, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895671.543467, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895675.5380394, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895677.1209185, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895680.8392098, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895681.3893638, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895684.3880756, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895689.7896779, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895693.0308018, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895703.231718, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895710.7870743, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895712.581574, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895715.5941656, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895721.6827443, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895725.1917863, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895725.237352, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895732.7761087, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895737.8790789, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895740.8751068, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895748.307578, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895751.2993956, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895751.8341625, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895754.8415864, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895761.029066, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895764.0342014, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895765.565194, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895774.4503505, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895774.9599218, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895796.202397, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895802.3167465, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895805.5575728, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895816.2313795, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895821.765814, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895823.794408, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895827.581551, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895829.1025891, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895834.8869267, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895845.5513244, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895849.5670388, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895850.6163516, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895853.600428, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895856.4435954, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895868.040327, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895871.6242757, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895893.5841823, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895893.8688893, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895905.2383647, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895912.1222599, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895919.9412491, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895943.2419086, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895954.6053658, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895962.0020614, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895964.9882455, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895968.5735388, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895972.583024, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895973.905623, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895976.9013262, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895977.4436777, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895980.7037058, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784896100.8576343, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784896103.8430579, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784896129.47467, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784896133.7382998, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}

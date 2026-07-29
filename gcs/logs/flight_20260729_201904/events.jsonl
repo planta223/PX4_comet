@@ -1,0 +1,117 @@
+{"ts": 1785323944.976511, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_201904", "trigger": "reboot"}
+{"ts": 1785323945.445677, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1785323947.9197152, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785323949.5154176, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785323949.5154176, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785323949.5154176, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785323949.5154176, "type": "rocket_state_transition", "from_state": "LANDED", "to_state": "READY"}
+{"ts": 1785323949.8955507, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 4.922291040420532, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1785323949.8955507, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785323950.0221229, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1785323950.0221229, "type": "message", "text": "COMET: Servos initialized", "severity": 6}
+{"ts": 1785323950.0221229, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1785323950.0221229, "type": "message", "text": "COMET: MAVLink command interface initialized", "severity": 6}
+{"ts": 1785323950.535263, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1785323950.5425131, "type": "message", "text": "COMET: Deploy output enabled", "severity": 6}
+{"ts": 1785323950.5425131, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1785323950.5425131, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785323950.5425131, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785323950.5468132, "type": "message", "text": "EKF3 not enough memory", "severity": 2}
+{"ts": 1785323950.558755, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785323953.115084, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785323955.7282019, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785323956.7541814, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785323956.7541814, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785323960.953409, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785323960.953409, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785323961.6170557, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785323961.9897115, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323961.9897115, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323964.027332, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785323964.5903797, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323964.5903797, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323965.373762, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785323966.1697855, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323966.1697855, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323967.1330354, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785323967.7341912, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323967.7341912, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323968.7983572, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785323969.2957757, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323969.2957757, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323969.9314008, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785323970.3288856, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323970.3288856, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323970.502464, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785323970.8529074, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323970.8529074, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323971.9566112, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785323972.4181035, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323972.4181035, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323972.8872375, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785323973.4633193, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323973.4633193, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323973.4957829, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785323973.980036, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323973.980036, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323974.067579, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785323974.517607, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323974.5337791, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323974.5502343, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 11}
+{"ts": 1785323975.0442243, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323975.0442243, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323975.3606765, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 12}
+{"ts": 1785323975.8782423, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 13}
+{"ts": 1785323976.053635, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323976.053635, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323976.2419863, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 14}
+{"ts": 1785323976.4316525, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 15}
+{"ts": 1785323976.6101575, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323976.6101575, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323976.6101575, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785323976.6377347, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323976.6377347, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323976.6377347, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323976.6377347, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323976.7378678, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 16}
+{"ts": 1785323976.9203682, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 17}
+{"ts": 1785323977.0874414, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 18}
+{"ts": 1785323977.156693, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323977.156693, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323977.156693, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323977.156693, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323977.6613781, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323977.6613781, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323986.0305467, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785323990.7598205, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785323990.9492846, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 19}
+{"ts": 1785323991.2958233, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323991.2958233, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323991.9096732, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 20}
+{"ts": 1785323992.3524184, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323992.3524184, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323992.604205, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 21}
+{"ts": 1785323992.872502, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323993.3455186, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 22}
+{"ts": 1785323993.3928838, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323993.8977122, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 23}
+{"ts": 1785323993.9133623, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323993.9133623, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323994.402315, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 24}
+{"ts": 1785323994.433774, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323994.433774, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323995.0162797, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323995.0162797, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323995.0268557, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 25}
+{"ts": 1785323995.5052412, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 26}
+{"ts": 1785323995.5523462, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323995.5523462, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323995.8992054, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 27}
+{"ts": 1785323996.1013503, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323996.1013503, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323996.5935013, "type": "message", "text": "COMET: MAVLink msg ignored (msgid=nil, expected 25", "severity": 6}
+{"ts": 1785323996.5935013, "type": "message", "text": "2)", "severity": 6}
+{"ts": 1785323997.1299818, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785323997.6997132, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785323998.2155106, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785323998.5327446, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}

@@ -1,0 +1,48 @@
+{"ts": 1785312012.6928015, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_170012", "trigger": "ascent"}
+{"ts": 1785312012.8422892, "type": "message", "text": "COMET: Remote command received", "severity": 6}
+{"ts": 1785312012.8422892, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785312012.8422892, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785312012.8422892, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785312015.4836211, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785312018.9004724, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785312021.720258, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785312022.9373212, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785312025.3643205, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785312027.126652, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785312027.6933618, "type": "message", "text": "COMET: Fault - maximum ascent time reached", "severity": 3}
+{"ts": 1785312027.6933618, "type": "message", "text": "COMET: Deploy fallback by timeout", "severity": 4}
+{"ts": 1785312027.6933618, "type": "message", "text": "COMET: ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785312027.6933618, "type": "message", "text": "COMET: Reason - maximum ascent time", "severity": 6}
+{"ts": 1785312027.6933618, "type": "message", "text": "COMET: Deploy attempt 1", "severity": 6}
+{"ts": 1785312027.793526, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785312028.20848, "type": "message", "text": "COMET: Deploy command succeeded", "severity": 6}
+{"ts": 1785312028.20848, "type": "message", "text": "COMET: Deploy - automatic", "severity": 6}
+{"ts": 1785312028.698048, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}
+{"ts": 1785312028.8171856, "type": "message", "text": "COMET: Servo operation time complete", "severity": 6}
+{"ts": 1785312028.8171856, "type": "message", "text": "COMET: DEPLOY -> DESCENT", "severity": 6}
+{"ts": 1785312028.8171856, "type": "message", "text": "COMET: Reason - deploy operation completed", "severity": 6}
+{"ts": 1785312031.465326, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785312031.7132611, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785312032.5808976, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312033.0616677, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312034.5037646, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312035.1637645, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312038.087056, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785312039.6359859, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312040.0510626, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312041.8902786, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312042.1747012, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312043.1144106, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785312043.7590468, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312044.4664326, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785312045.3845556, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785312047.6796439, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785312051.862716, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": false, "result": null, "attempts": 3}
+{"ts": 1785312052.183132, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785312052.7340083, "type": "message", "text": "COMET: Remote command received", "severity": 6}
+{"ts": 1785312052.7340083, "type": "message", "text": "COMET: DESCENT -> LANDED", "severity": 6}
+{"ts": 1785312052.7340083, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785312052.7340083, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785312053.1836398, "type": "rocket_state_transition", "from_state": "DESCENT", "to_state": "LANDED"}
+{"ts": 1785312053.208697, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\flight_20260729_170012\\snapshots\\landed_20260729_170053.png", "severity": 6}
+{"ts": 1785312062.1549788, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}

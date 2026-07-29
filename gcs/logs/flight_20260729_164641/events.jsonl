@@ -1,0 +1,12 @@
+{"ts": 1785311201.4399836, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_164641", "trigger": "ascent"}
+{"ts": 1785311206.9601114, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785311213.4079568, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785311214.8431568, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785311216.2962596, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785311217.3633702, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}
+{"ts": 1785311221.3241122, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785311223.621922, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785311230.125914, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": false, "result": null, "attempts": 3}
+{"ts": 1785311233.6873906, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785311235.5802083, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785311237.3718655, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}

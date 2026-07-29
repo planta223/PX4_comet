@@ -1,0 +1,1 @@
+timestamp,raw_lat,raw_lon,raw_alt_m,gps_fix_type,gps_satellites,gps_hdop,raw_accel_e,raw_accel_n,raw_accel_z,attitude_roll,attitude_pitch,attitude_yaw,baro_press_hpa,baro_alt_m,battery_voltage_v,battery_current_a,cpu_load_pct,kf_pos_e,kf_pos_n,kf_alt,kf_vel_e,kf_vel_n,kf_vel_z

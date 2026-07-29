@@ -1,0 +1,20 @@
+{"ts": 1785311248.5470085, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_164728", "trigger": "reboot"}
+{"ts": 1785311248.9802191, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1785311248.9802191, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 0.48242855072021484, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1785311251.670874, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785311251.984638, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1785311252.996341, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1785311253.2181194, "type": "rocket_state_transition", "from_state": "DESCENT", "to_state": "READY"}
+{"ts": 1785311253.2208095, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785311256.6007204, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785311256.6007204, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785311256.6007204, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1785311256.6007204, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785311256.6007204, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785311260.2863157, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785311260.2863157, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785311261.850629, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785311263.9865727, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785311265.3318439, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785311265.834499, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785311265.9892359, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}

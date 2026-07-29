@@ -1,0 +1,32 @@
+{
+  "flight_dir": "./logs\\flight_20260729_202508",
+  "started_at": "2026-07-29T20:25:08.531598",
+  "reboot_verify": {
+    "sik_link": null,
+    "raw_imu": null,
+    "attitude": null,
+    "lora_link": null
+  },
+  "origin_lat": null,
+  "origin_lon": null,
+  "kf_observation_noise_horizontal": [
+    1.6,
+    1.6
+  ],
+  "kf_observation_noise_vertical": [
+    0.01
+  ],
+  "servo_channels": [
+    {
+      "channel": 9,
+      "label": "낙하산 서보",
+      "pwm_min": 1000,
+      "pwm_max": 2000,
+      "pwm_default": 1500
+    }
+  ],
+  "sik_connection_string": "COM10",
+  "sik_baudrate": 57600,
+  "lora_serial_port": "COM9",
+  "lora_baudrate": 9600
+}

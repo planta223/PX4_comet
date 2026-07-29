@@ -1,0 +1,105 @@
+{"ts": 1785316404.095916, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_181324", "trigger": "reboot"}
+{"ts": 1785316404.3732507, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1785316407.8809185, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1785316409.9283445, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1785316411.4335213, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785316411.4335213, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785316412.4379861, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785316412.482086, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785316412.947304, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785316413.0394032, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 8.946136236190796, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1785316413.0477045, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785316413.4562383, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: Servos initialized", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: MAVLink command interface unavailable - /AP", "severity": 4}
+{"ts": 1785316413.4643133, "type": "message", "text": "M/scripts/modules/comet_mavlink.lua:160: module 'M", "severity": 4}
+{"ts": 1785316413.4643133, "type": "message", "text": "AVLink/mavlink_msgs' not found:MAVLink/mavlink_msg", "severity": 4}
+{"ts": 1785316413.4643133, "type": "message", "text": "s", "severity": 4}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: Deploy output enabled", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: MAVLink command interface unavailable", "severity": 4}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785316413.4643133, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785316414.4894855, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785316414.4894855, "type": "message", "text": "EKF3 IMU1 initialised", "severity": 6}
+{"ts": 1785316416.0200565, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785316416.0200565, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1785316416.0200565, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785316416.0200565, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785316416.0200565, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785316419.628352, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785316419.6601083, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785316420.1382504, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785316421.0192206, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785316421.9154563, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785316422.8911226, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785316423.701795, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785316426.0661755, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785316426.4299822, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "RECEIVED", "attempts": 1}
+{"ts": 1785316426.5581057, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Command received (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Command queued (LORA seq=0 cmd=7, depth=1)", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Command executing (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785316426.7700036, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785316427.9542308, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785316429.0635493, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785316429.800606, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785316430.7346377, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785316431.5600688, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785316432.16933, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785316432.6579175, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785316433.0292065, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 11}
+{"ts": 1785316434.34454, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 12}
+{"ts": 1785316435.1937897, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785316439.608136, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785316441.510512, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785316441.6624064, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Fault - maximum ascent time reached", "severity": 3}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Deploy fallback by timeout", "severity": 4}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Reason - maximum ascent time", "severity": 6}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Deploy attempt 1", "severity": 6}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Deploy command succeeded", "severity": 6}
+{"ts": 1785316441.6745803, "type": "message", "text": "COMET: Deploy - automatic", "severity": 6}
+{"ts": 1785316442.5651183, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}
+{"ts": 1785316442.7106273, "type": "message", "text": "COMET: Servo operation time complete", "severity": 6}
+{"ts": 1785316442.7106273, "type": "message", "text": "COMET: DEPLOY -> DESCENT", "severity": 6}
+{"ts": 1785316442.7106273, "type": "message", "text": "COMET: Reason - deploy operation completed", "severity": 6}
+{"ts": 1785316448.5049925, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785316451.6889892, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 13}
+{"ts": 1785316453.005531, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": true, "result": "RECEIVED", "attempts": 3}
+{"ts": 1785316453.113134, "type": "message", "text": "COMET: Command received (LORA seq=2 cmd=10)", "severity": 6}
+{"ts": 1785316453.113134, "type": "message", "text": "COMET: Command queued (LORA seq=2 cmd=10, depth=1)", "severity": 6}
+{"ts": 1785316453.621622, "type": "message", "text": "COMET: Command executing (LORA seq=2 cmd=10)", "severity": 6}
+{"ts": 1785316453.621622, "type": "message", "text": "COMET: DESCENT -> LANDED", "severity": 6}
+{"ts": 1785316453.621622, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785316453.621622, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785316453.621622, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785316453.9997873, "type": "rocket_state_transition", "from_state": "DESCENT", "to_state": "LANDED"}
+{"ts": 1785316454.0132158, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\flight_20260729_181324\\snapshots\\landed_20260729_181414.png", "severity": 6}
+{"ts": 1785316460.8744926, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 14}
+{"ts": 1785316464.3009312, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 15}
+{"ts": 1785316469.8766909, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 16}
+{"ts": 1785316470.7369313, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785316473.2045774, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 17}
+{"ts": 1785316474.2229967, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 18}
+{"ts": 1785316474.8130813, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 19}
+{"ts": 1785316475.3359694, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 20}
+{"ts": 1785316480.109887, "type": "message", "text": "COMET: Command received (LORA seq=3 cmd=11)", "severity": 6}
+{"ts": 1785316480.109887, "type": "message", "text": "COMET: Command queued (LORA seq=3 cmd=11, depth=1)", "severity": 6}
+{"ts": 1785316480.109887, "type": "message", "text": "COMET: Command executing (LORA seq=3 cmd=11)", "severity": 6}
+{"ts": 1785316480.109887, "type": "lora_command_result", "command_name": "RESET", "success": true, "result": "RECEIVED", "attempts": 1}
+{"ts": 1785316480.617555, "type": "message", "text": "COMET: Flight state reset", "severity": 6}
+{"ts": 1785316480.617555, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785316480.617555, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785316480.617555, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785316480.617555, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785316481.1300347, "type": "rocket_state_transition", "from_state": "LANDED", "to_state": "READY"}
+{"ts": 1785316483.2295496, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785316484.0915337, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 21}
+{"ts": 1785316486.4462814, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 22}

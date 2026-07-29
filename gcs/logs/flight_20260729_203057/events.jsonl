@@ -1,0 +1,64 @@
+{"ts": 1785324657.0638025, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_203057", "trigger": "reboot"}
+{"ts": 1785324657.1930125, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1785324657.3328726, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 0.28172826766967773, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1785324660.2212746, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1785324660.3352716, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785324660.723042, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1785324661.7461462, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785324661.7461462, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785324661.7461462, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785324662.2252357, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785324662.2953687, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1785324662.3060536, "type": "message", "text": "COMET: Servos initialized", "severity": 6}
+{"ts": 1785324662.3060536, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1785324662.3060536, "type": "message", "text": "COMET: MAVLink command interface initialized", "severity": 6}
+{"ts": 1785324662.3060536, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1785324662.8076055, "type": "message", "text": "COMET: Deploy output enabled", "severity": 6}
+{"ts": 1785324662.8076055, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1785324662.8076055, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785324662.8076055, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785324662.8395233, "type": "message", "text": "EKF3 not enough memory", "severity": 2}
+{"ts": 1785324662.8395233, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324665.413069, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785324667.9970737, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324669.0272782, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785324669.0272782, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785324670.1894271, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785324670.5858805, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324670.5858805, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324671.4107223, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785324672.1848035, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324672.1848035, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324673.2256868, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785324673.7781012, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785324674.2726264, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324674.2726264, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324674.442277, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785324674.7906542, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324674.7906542, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324675.9590034, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785324676.354247, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324676.354247, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324676.977349, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785324677.3832777, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324677.3832777, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324677.5779953, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785324677.9268548, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324678.426227, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324678.4420016, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785324678.9318085, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785324678.9953027, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324678.9953027, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324679.343029, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785324679.518227, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324679.518227, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324679.7543693, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785324680.0555658, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324680.0555658, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324680.0714698, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324680.0714698, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324680.6099365, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 11}
+{"ts": 1785324680.9735966, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 12}
+{"ts": 1785324681.0995274, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785324681.0995274, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785324681.637393, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}

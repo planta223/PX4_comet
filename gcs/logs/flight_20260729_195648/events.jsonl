@@ -1,0 +1,41 @@
+{"ts": 1785322608.1848552, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_195648", "trigger": "ascent"}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Command received (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Command queued (LORA seq=0 cmd=7, depth=1)", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Command executing (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785322608.4926822, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785322611.2176483, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785322611.4716616, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785322615.7009692, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785322616.3534162, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785322616.5518866, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785322616.7046623, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785322617.0586293, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785322618.3896804, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785322623.0569477, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Fault - maximum ascent time reached", "severity": 3}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Deploy fallback by timeout", "severity": 4}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Reason - maximum ascent time", "severity": 6}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Deploy attempt 1", "severity": 6}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Deploy command succeeded", "severity": 6}
+{"ts": 1785322623.5791402, "type": "message", "text": "COMET: Deploy - automatic", "severity": 6}
+{"ts": 1785322624.1222267, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}
+{"ts": 1785322624.150415, "type": "message", "text": "COMET: Servo operation time complete", "severity": 6}
+{"ts": 1785322624.150415, "type": "message", "text": "COMET: DEPLOY -> DESCENT", "severity": 6}
+{"ts": 1785322624.150415, "type": "message", "text": "COMET: Reason - deploy operation completed", "severity": 6}
+{"ts": 1785322624.8583837, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785322638.2008543, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785322642.1385117, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785322642.5326486, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785322644.588584, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": false, "result": null, "attempts": 3}
+{"ts": 1785322644.921906, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: Command received (LORA seq=3 cmd=10)", "severity": 6}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: Command queued (LORA seq=3 cmd=10, depth=1)", "severity": 6}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: Command executing (LORA seq=3 cmd=10)", "severity": 6}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: DESCENT -> LANDED", "severity": 6}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785322645.2132392, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785322645.7193544, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}

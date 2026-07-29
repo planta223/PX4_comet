@@ -1,0 +1,79 @@
+{"ts": 1785326187.7674205, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_205627", "trigger": "ascent"}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: Command received (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: Command queued (LORA seq=0 cmd=7, depth=1)", "severity": 6}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: Command executing (LORA seq=0 cmd=7)", "severity": 6}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785326188.1129963, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785326188.1329675, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785326193.5862517, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785326194.14546, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326194.14546, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326194.7337403, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785326195.2381148, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326195.2381148, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326195.2381148, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785326195.7777982, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326195.7777982, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326195.8085103, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785326196.3436017, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326196.3436017, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326196.755548, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785326200.6931195, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326200.759315, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785326201.6745024, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785326202.6116467, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785326202.880803, "type": "message", "text": "COMET: Fault - maximum ascent time reached", "severity": 3}
+{"ts": 1785326202.880803, "type": "message", "text": "COMET: Deploy fallback by timeout", "severity": 4}
+{"ts": 1785326202.880803, "type": "message", "text": "COMET: ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785326202.9355211, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785326203.1496685, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": false, "result": null, "attempts": 3}
+{"ts": 1785326203.3871324, "type": "message", "text": "COMET: Reason - maximum ascent time", "severity": 6}
+{"ts": 1785326203.3871324, "type": "message", "text": "COMET: Deploy attempt 1", "severity": 6}
+{"ts": 1785326203.3871324, "type": "message", "text": "COMET: Deploy command succeeded", "severity": 6}
+{"ts": 1785326203.3871324, "type": "message", "text": "COMET: Deploy - automatic", "severity": 6}
+{"ts": 1785326203.6085024, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785326203.9310763, "type": "message", "text": "COMET: Command received (LORA seq=2 cmd=8)", "severity": 6}
+{"ts": 1785326203.9310763, "type": "message", "text": "COMET: Command queued (LORA seq=2 cmd=8, depth=1)", "severity": 6}
+{"ts": 1785326203.9310763, "type": "message", "text": "COMET: Command executing (LORA seq=2 cmd=8)", "severity": 6}
+{"ts": 1785326204.003026, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}
+{"ts": 1785326204.082215, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785326204.4467123, "type": "message", "text": "COMET: Remote command rejected", "severity": 4}
+{"ts": 1785326204.4467123, "type": "message", "text": "COMET: Command completed (result=NOT_ALLOWED)", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Servo operation time complete", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: DEPLOY -> DESCENT", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Reason - deploy operation completed", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Command received (LORA seq=3 cmd=8)", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Command queued (LORA seq=3 cmd=8, depth=1)", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Command executing (LORA seq=3 cmd=8)", "severity": 6}
+{"ts": 1785326204.478099, "type": "message", "text": "COMET: Remote command rejected", "severity": 4}
+{"ts": 1785326204.4937768, "type": "message", "text": "COMET: Command completed (result=NOT_ALLOWED)", "severity": 6}
+{"ts": 1785326204.589509, "type": "lora_command_result", "command_name": "FORCE_DEPLOY", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785326205.017644, "type": "message", "text": "COMET: Command received (LORA seq=4 cmd=8)", "severity": 6}
+{"ts": 1785326205.017644, "type": "message", "text": "COMET: Command queued (LORA seq=4 cmd=8, depth=1)", "severity": 6}
+{"ts": 1785326205.017644, "type": "message", "text": "COMET: Command executing (LORA seq=4 cmd=8)", "severity": 6}
+{"ts": 1785326205.017644, "type": "message", "text": "COMET: Remote command rejected", "severity": 4}
+{"ts": 1785326205.017644, "type": "message", "text": "COMET: Command completed (result=NOT_ALLOWED)", "severity": 6}
+{"ts": 1785326207.884785, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785326209.3718917, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326214.2529488, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326214.444358, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": false, "result": null, "attempts": 3}
+{"ts": 1785326217.4790068, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785326219.2245564, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785326219.6252463, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326220.2686825, "type": "force_transition_sent", "command_name": "FORCE_LANDED"}
+{"ts": 1785326223.9620724, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": false, "result": null, "attempts": 3}
+{"ts": 1785326224.3727384, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326224.3884583, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Command received (LORA seq=7 cmd=10)", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Command queued (LORA seq=7 cmd=10, depth=1)", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Command executing (LORA seq=7 cmd=10)", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: DESCENT -> LANDED", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785326224.8931699, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785326224.8931699, "type": "lora_command_result", "command_name": "FORCE_LANDED", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785326225.1202888, "type": "rocket_state_transition", "from_state": "DESCENT", "to_state": "LANDED"}
+{"ts": 1785326225.1419938, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\flight_20260729_205627\\snapshots\\landed_20260729_205705.png", "severity": 6}
+{"ts": 1785326225.417813, "type": "message", "text": "COMET: Command received (LORA seq=8 cmd=10)", "severity": 6}

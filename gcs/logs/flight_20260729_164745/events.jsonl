@@ -1,0 +1,16 @@
+{"ts": 1785311265.9908814, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260729_164745", "trigger": "ascent"}
+{"ts": 1785311266.0704777, "type": "message", "text": "COMET: Remote command received", "severity": 6}
+{"ts": 1785311266.0704777, "type": "message", "text": "COMET: READY -> ASCENT", "severity": 6}
+{"ts": 1785311266.0704777, "type": "message", "text": "COMET: Reason - remote forced transition", "severity": 6}
+{"ts": 1785311266.0704777, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785311275.5525808, "type": "force_transition_sent", "command_name": "FORCE_DEPLOY"}
+{"ts": 1785311279.8421302, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785311280.8458936, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DEPLOY"}
+{"ts": 1785311280.8955405, "type": "message", "text": "COMET: Fault - maximum ascent time reached", "severity": 3}
+{"ts": 1785311281.3856533, "type": "message", "text": "COMET: Deploy fallback by timeout", "severity": 4}
+{"ts": 1785311281.3856533, "type": "message", "text": "COMET: ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785311281.3856533, "type": "message", "text": "COMET: Reason - maximum ascent time", "severity": 6}
+{"ts": 1785311281.4219038, "type": "message", "text": "COMET: Deploy attempt 1", "severity": 6}
+{"ts": 1785311281.4219038, "type": "message", "text": "COMET: Deploy command succeeded", "severity": 6}
+{"ts": 1785311281.4219038, "type": "message", "text": "COMET: Deploy - automatic", "severity": 6}
+{"ts": 1785311281.9061773, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "DESCENT"}

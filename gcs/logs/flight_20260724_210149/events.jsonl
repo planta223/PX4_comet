@@ -1,0 +1,3 @@
+{"ts": 1784894509.4159198, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260724_210149", "trigger": "ascent"}
+{"ts": 1784894568.4533947, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784894591.3865569, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}

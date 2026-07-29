@@ -1,0 +1,10 @@
+{"ts": 1784894327.4956648, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260724_205847", "trigger": "ascent"}
+{"ts": 1784894337.864067, "type": "reboot_requested", "success": true}
+{"ts": 1784894338.0692332, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784894338.101057, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 0.23698997497558594, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1784894340.9186726, "type": "gcs_ready_authorized"}
+{"ts": 1784894341.0774245, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784894341.0932176, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784894341.575013, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784894342.6461704, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784894374.6465597, "type": "gcs_ready_authorized"}

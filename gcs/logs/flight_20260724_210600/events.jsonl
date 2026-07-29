@@ -1,0 +1,50 @@
+{"ts": 1784894760.1333735, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260724_210600", "trigger": "ascent"}
+{"ts": 1784894777.92117, "type": "gcs_ready_authorized"}
+{"ts": 1784894797.920042, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784894798.2248437, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784894897.8888407, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784894918.9417524, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784894931.3997965, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784894949.311795, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784894950.2208831, "type": "gcs_ready_authorized"}
+{"ts": 1784894963.0961876, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784894972.875155, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784894974.4244938, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1784895033.9129207, "type": "message", "text": "EKF3 IMU0 origin set", "severity": 6}
+{"ts": 1784895033.9129207, "type": "message", "text": "EKF3 IMU1 origin set", "severity": 6}
+{"ts": 1784895033.9129207, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}
+{"ts": 1784895033.9129207, "type": "message", "text": "EKF3 IMU1 is using GPS", "severity": 6}
+{"ts": 1784895033.9129207, "type": "message", "text": "AHRS: EKF3 active", "severity": 6}
+{"ts": 1784895036.3497248, "type": "gcs_ready_authorized"}
+{"ts": 1784895041.2701933, "type": "reboot_requested", "success": true}
+{"ts": 1784895041.6035104, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784895041.6035104, "type": "reboot_verify_result", "passed": true, "elapsed_sec": 0.3333170413970947, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": true}}
+{"ts": 1784895044.6122994, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784895068.8810542, "type": "reboot_requested", "success": true}
+{"ts": 1784895071.2731783, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784895072.2756457, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1784895072.2756457, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1784895074.289707, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895079.307703, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895083.890987, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 15.00993275642395, "checks": {"sik_link": true, "raw_imu": null, "attitude": null, "lora_link": null}}
+{"ts": 1784895084.3481147, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895089.3690233, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895094.3892233, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895099.4136581, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784895103.4459026, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1784895103.4459026, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1784895103.4459026, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1784895103.4459026, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "READY"}
+{"ts": 1784895103.7468946, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784895103.9598856, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1784895103.9598856, "type": "message", "text": "COMET: SERVO1 function not assigned", "severity": 3}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: SERVO2 function not assigned", "severity": 3}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: Servo initialization failed", "severity": 3}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: Servo initialization failed", "severity": 3}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: [TEST] ������ ��������� ��������������� ���", "severity": 4}
+{"ts": 1784895103.9618945, "type": "message", "text": "������ ��������� ������ ������", "severity": 4}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1784895103.9618945, "type": "message", "text": "COMET: State ASCENT", "severity": 6}
+{"ts": 1784895103.9618945, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}

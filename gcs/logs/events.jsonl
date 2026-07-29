@@ -1,0 +1,520 @@
+{"ts": 1784892668.428117, "type": "reboot_requested", "success": true}
+{"ts": 1784892668.5120234, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784892673.4368355, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 5.006985664367676, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": null}}
+{"ts": 1784892724.6889825, "type": "reboot_requested", "success": true}
+{"ts": 1784892725.1514025, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784892729.7077947, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 5.01881217956543, "checks": {"sik_link": true, "raw_imu": null, "attitude": null, "lora_link": null}}
+{"ts": 1784893299.0219898, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784893304.1202445, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1784893339.9310822, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784893340.170128, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784893519.506131, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784893521.7612877, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784893640.905144, "type": "reboot_requested", "success": true}
+{"ts": 1784893643.4272842, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784893643.4429886, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784893643.4429886, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784893643.950527, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784893644.4467916, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1784893644.4467916, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1784893645.9149346, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 5.004966974258423, "checks": {"sik_link": true, "raw_imu": null, "attitude": null, "lora_link": true}}
+{"ts": 1784893646.4596841, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893651.4935582, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893656.5213635, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893661.5530305, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893666.5718153, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893671.607822, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1784893675.6281433, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1784893675.6281433, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1784893675.6281433, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1784893675.6281433, "type": "message", "text": "COMET: Sensor interface initialized", "severity": 6}
+{"ts": 1784893675.6281433, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "READY"}
+{"ts": 1784893675.6422, "type": "message", "text": "COMET: SERVO1 function not assigned", "severity": 3}
+{"ts": 1784893675.7946057, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: SERVO2 function not assigned", "severity": 3}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: Servo initialization failed", "severity": 3}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: LoRa initialized", "severity": 6}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: Flight state initialized", "severity": 6}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: Servo initialization failed", "severity": 3}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: [TEST] ������ ��������� ��������������� ���", "severity": 4}
+{"ts": 1784893676.14448, "type": "message", "text": "������ ��������� ������ ������", "severity": 4}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: System initialized", "severity": 6}
+{"ts": 1784893676.14448, "type": "message", "text": "COMET: State ASCENT", "severity": 6}
+{"ts": 1784893676.14448, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784893676.6570983, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784893677.1674404, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1784893677.1674404, "type": "message", "text": "EKF3 IMU1 initialised", "severity": 6}
+{"ts": 1784893679.182963, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1784893679.182963, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1784893679.182963, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1784893679.182963, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1784893682.6985931, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1784893682.6985931, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1784893686.7155006, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1784893706.3316712, "type": "message", "text": "PreArm: Hardware safety switch", "severity": 2}
+{"ts": 1784893706.3316712, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1784893717.868697, "type": "reboot_requested", "success": true}
+{"ts": 1784893720.4046173, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784893721.1194978, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784893722.9066784, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 5.0379815101623535, "checks": {"sik_link": null, "raw_imu": null, "attitude": null, "lora_link": true}}
+{"ts": 1784893723.4365544, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784893724.4876347, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784893764.1826622, "type": "reboot_requested", "success": true}
+{"ts": 1784893764.2458942, "type": "reboot_verify_servo_lock_sent", "channels": [9]}
+{"ts": 1784893767.444915, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784893769.0599375, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784893919.8945093, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784893951.0192547, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784893962.8749459, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1784893963.2851892, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1784893967.793264, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1784893969.9082408, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1784894327.4883237, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784894509.3652365, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1784894760.1293488, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785311171.179804, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785311192.3131416, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785311192.7108915, "type": "lora_command_result", "command_name": "RELEASE_ALL", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785311193.7301307, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785311194.1257133, "type": "lora_command_result", "command_name": "RELEASE_ALL", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785311194.584556, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785311194.937291, "type": "lora_command_result", "command_name": "RELEASE_ALL", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785311200.1261835, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785311200.8611188, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785311201.25008, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785311201.433456, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785311239.2357028, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DESCENT"}
+{"ts": 1785311239.2415602, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785311248.4977906, "type": "reboot_requested", "success": true}
+{"ts": 1785311289.2017617, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DESCENT"}
+{"ts": 1785311973.6475, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DESCENT"}
+{"ts": 1785311973.653304, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785311976.788872, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785311977.14523, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785311980.1502154, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785311980.7591262, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785311987.4423125, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785311993.0444849, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785311995.951343, "type": "reboot_requested", "success": true}
+{"ts": 1785312421.681077, "type": "rocket_state_transition", "from_state": "READY", "to_state": "LANDED"}
+{"ts": 1785312421.689308, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\snapshots\\landed_20260729_170701.png", "severity": 6}
+{"ts": 1785312421.689308, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785312433.7565522, "type": "reboot_requested", "success": true}
+{"ts": 1785312520.8050342, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DESCENT"}
+{"ts": 1785312520.8179483, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785312527.02633, "type": "servo_command", "channel": "all", "pwm_key": "pwm_min", "path": "sik"}
+{"ts": 1785312527.3806832, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785312527.388373, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785312535.20454, "type": "reboot_requested", "success": true}
+{"ts": 1785312692.9178255, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DESCENT"}
+{"ts": 1785312692.9284704, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785312700.5934632, "type": "reboot_requested", "success": true}
+{"ts": 1785313083.473973, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785313093.8146358, "type": "lora_command_result", "command_name": "RESET", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785313094.129659, "type": "message", "text": "COMET: Remote command received", "severity": 6}
+{"ts": 1785313094.129659, "type": "message", "text": "COMET: Flight state reset", "severity": 6}
+{"ts": 1785313094.129659, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785313094.129659, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785313094.129659, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785313097.301784, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785313104.2291915, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785313107.667356, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785313108.280538, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785313110.9703884, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 2}
+{"ts": 1785313110.9703884, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785314460.3913352, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785314461.0156946, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785314466.1851954, "type": "servo_command", "channel": "all", "pwm_key": "pwm_min", "path": "sik"}
+{"ts": 1785314466.6684318, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785314467.0051117, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785314467.6822834, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785314467.6911104, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785314472.5236166, "type": "servo_command", "channel": "all", "pwm_key": "pwm_min", "path": "sik"}
+{"ts": 1785314473.342164, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785314473.4519873, "type": "servo_command", "channel": "all", "pwm_key": "pwm_max", "path": "sik"}
+{"ts": 1785314473.8833477, "type": "message", "text": "ServoRelayEvent: Channel 9 is already in use", "severity": 6}
+{"ts": 1785314935.7595525, "type": "message", "text": "No ap_message for mavlink id (252)", "severity": 6}
+{"ts": 1785314936.7755935, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785314936.7755935, "type": "message", "text": "EKF3 IMU1 tilt alignment complete", "severity": 6}
+{"ts": 1785314937.2846956, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785314937.2867043, "type": "message", "text": "EKF3 IMU1 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785314940.0547445, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785314940.8520331, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785314940.8520331, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785314943.9183345, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314943.9183345, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314943.9183345, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785314944.948451, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785314948.610425, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785314949.7157187, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785314953.800218, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314953.800218, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314953.800218, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785314954.0729198, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785314956.5000231, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785314960.594847, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785314960.6070354, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785314960.6070354, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785314963.4490833, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785314963.782371, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314963.782371, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314963.782371, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785314964.1364686, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785314973.8649354, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314973.8649354, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314973.8649354, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785314983.9064813, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314983.9064813, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314983.9064813, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785314991.3823586, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785314991.3823586, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785314991.3901336, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785314994.0151927, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785314994.0151927, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785314994.0151927, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785315005.149282, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785315005.149282, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785315005.149282, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785315013.7735565, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785315013.7735565, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785315013.7735565, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785315022.535137, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785315022.535137, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785315022.535137, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785315024.1594827, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785315024.1594827, "type": "message", "text": "dule 'MAVLink/mavlink_msgs' not found:MAVLink/mavl", "severity": 7}
+{"ts": 1785315024.1594827, "type": "message", "text": "ink_msgs", "severity": 7}
+{"ts": 1785315034.031918, "type": "message", "text": "Lua: /APM/scripts/modules/comet_mavlink.lua:26: mo", "severity": 7}
+{"ts": 1785315067.8764174, "type": "message", "text": "No ap_message for mavlink id (252)", "severity": 6}
+{"ts": 1785315090.3298593, "type": "message", "text": "No ap_message for mavlink id (252)", "severity": 6}
+{"ts": 1785315115.471924, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785315115.471924, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785315115.471924, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785315146.285899, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785315146.8184137, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785315321.1785316, "type": "message", "text": "No ap_message for mavlink id (252)", "severity": 6}
+{"ts": 1785315332.5397305, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785315895.980685, "type": "message", "text": "No ap_message for mavlink id (252)", "severity": 6}
+{"ts": 1785315921.6453626, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_mavl", "severity": 2}
+{"ts": 1785316373.607995, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785316387.6411884, "type": "message", "text": "ink.lua:", "severity": 2}
+{"ts": 1785316404.093267, "type": "reboot_requested", "success": true}
+{"ts": 1785322570.8734834, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785322571.0794356, "type": "message", "text": "No ap_message for mavlink id (251)", "severity": 6}
+{"ts": 1785322580.448651, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785322598.2733998, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785322600.2157443, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785322606.6482046, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785322607.6306968, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785322608.0485213, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785322608.1747677, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785322898.4527729, "type": "rocket_state_transition", "from_state": "READY", "to_state": "LANDED"}
+{"ts": 1785322898.4685655, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\snapshots\\landed_20260729_200138.png", "severity": 6}
+{"ts": 1785322898.4685655, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785322909.0578923, "type": "lora_command_result", "command_name": "RESET", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Command received (LORA seq=0 cmd=11)", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Command queued (LORA seq=0 cmd=11, depth=1)", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Command executing (LORA seq=0 cmd=11)", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Flight state reset", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785322909.5811238, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785322909.5811238, "type": "rocket_state_transition", "from_state": "LANDED", "to_state": "READY"}
+{"ts": 1785322912.2666945, "type": "message", "text": "COMET: Accel sensor stable", "severity": 6}
+{"ts": 1785322915.2302144, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785322917.726869, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785322918.883787, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785322921.3541882, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785322935.6632688, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785322936.2456179, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785322936.6364348, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785322936.7568235, "type": "message", "text": "COMET: Command received (LORA seq=1 cmd=7)", "severity": 6}
+{"ts": 1785322936.7568235, "type": "message", "text": "COMET: Command queued (LORA seq=1 cmd=7, depth=1)", "severity": 6}
+{"ts": 1785322936.7568235, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785323435.9588773, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785323441.3220704, "type": "reboot_requested", "success": true}
+{"ts": 1785323936.8209078, "type": "rocket_state_transition", "from_state": "READY", "to_state": "LANDED"}
+{"ts": 1785323936.8368175, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\snapshots\\landed_20260729_201856.png", "severity": 6}
+{"ts": 1785323936.8368175, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785323944.9732597, "type": "reboot_requested", "success": true}
+{"ts": 1785324304.6840634, "type": "rocket_state_transition", "from_state": "READY", "to_state": "LANDED"}
+{"ts": 1785324304.6997776, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\snapshots\\landed_20260729_202504.png", "severity": 6}
+{"ts": 1785324304.6997776, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785324307.4610932, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324308.5315983, "type": "reboot_requested", "success": true}
+{"ts": 1785324648.2553866, "type": "rocket_state_transition", "from_state": "READY", "to_state": "LANDED"}
+{"ts": 1785324648.2634099, "type": "message", "text": "착륙 스냅샷 저장됨: ./logs\\snapshots\\landed_20260729_203048.png", "severity": 6}
+{"ts": 1785324648.2634099, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785324649.986745, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785324650.487329, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324655.6244276, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324656.205821, "type": "lora_command_result", "command_name": "RESET", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785324656.3302271, "type": "rocket_state_transition", "from_state": "LANDED", "to_state": "READY"}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Command received (LORA seq=0 cmd=11)", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Command queued (LORA seq=0 cmd=11, depth=1)", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Command executing (LORA seq=0 cmd=11)", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Flight state reset", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Remote command succeeded", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Command completed (result=OK)", "severity": 6}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Fault - position invalid", "severity": 3}
+{"ts": 1785324656.6687615, "type": "message", "text": "COMET: Fault - velocity invalid", "severity": 3}
+{"ts": 1785324657.0511444, "type": "reboot_requested", "success": true}
+{"ts": 1785324722.692063, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785324723.3053532, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324728.4341345, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324733.2117455, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324738.4747007, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324743.2087338, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324748.4617777, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324750.5772347, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785324753.2191923, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324758.5198603, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324763.4114869, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324768.728256, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324773.5186384, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324778.4154084, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785324780.5801842, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785324783.730584, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325849.5319357, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785325852.7875426, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325853.5537696, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785325854.3094935, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325854.3094935, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325854.6385777, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785325855.3410642, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325855.3410642, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325855.6203182, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785325856.3767095, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325856.3767095, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325859.501906, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785325860.7924023, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785325861.2486227, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785325861.6285822, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325861.6285822, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325861.9174743, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785325862.1489055, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325862.1489055, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325862.4289014, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785325862.6943307, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325862.6943307, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325863.1218545, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785325863.216064, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325863.216064, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325863.5331566, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785325863.7506828, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325863.7506828, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325864.0514026, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785325864.279339, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325864.279339, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325864.7904432, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325864.7904432, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325865.059541, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785325865.32453, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785325865.32453, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785325873.1921256, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325877.984478, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325883.1830075, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325888.0480566, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325890.7070656, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785325893.411285, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325898.290675, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325903.0071118, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325907.862828, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325913.3312306, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325918.2972925, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325921.5728958, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785325923.140512, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325927.8649762, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325933.248335, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325938.039493, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325943.3475394, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325948.040363, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325952.7247007, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785325953.2325985, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325958.5821087, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325963.2736046, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325968.612161, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325973.4235756, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785325978.1786604, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326166.9039297, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785326169.2558038, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326169.7638044, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326170.8759923, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785326171.3050423, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326171.3050423, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326177.3793592, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785326178.0568104, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326178.0662148, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326178.2295756, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785326179.127182, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326179.127182, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326180.2492642, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785326180.749023, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326180.749023, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326180.9639983, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785326181.2923079, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326181.803876, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326183.3713083, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785326183.9104, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326183.9104, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326183.957601, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785326184.4375577, "type": "message", "text": "COMET: MAVLink msg probe: (no candidate method wor", "severity": 6}
+{"ts": 1785326184.4375577, "type": "message", "text": "ked - msg type=string)", "severity": 6}
+{"ts": 1785326186.5951278, "type": "force_transition_armed_toggled", "armed": true}
+{"ts": 1785326187.3562088, "type": "force_transition_sent", "command_name": "FORCE_ASCENT"}
+{"ts": 1785326187.7581282, "type": "lora_command_result", "command_name": "FORCE_ASCENT", "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785326187.7581282, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785326392.3017104, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326392.8179636, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326397.4341156, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326402.5674078, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326407.2723737, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326410.8727672, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 0}
+{"ts": 1785326411.4728873, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=2", "severity": 4}
+{"ts": 1785326411.4728873, "type": "message", "text": "2)", "severity": 4}
+{"ts": 1785326412.057145, "type": "message", "text": "FC 오류 플래그 발생: POSITION_INVALID, VELOCITY_INVALID", "severity": 2}
+{"ts": 1785326414.7262115, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 1}
+{"ts": 1785326415.151396, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326415.151396, "type": "message", "text": "23)", "severity": 4}
+{"ts": 1785326415.9264553, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 2}
+{"ts": 1785326416.701776, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=3", "severity": 4}
+{"ts": 1785326416.701776, "type": "message", "text": "8)", "severity": 4}
+{"ts": 1785326417.7495468, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 3}
+{"ts": 1785326418.3174958, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326418.3174958, "type": "message", "text": "91)", "severity": 4}
+{"ts": 1785326418.6369178, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 4}
+{"ts": 1785326419.3317053, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326419.3317053, "type": "message", "text": "48)", "severity": 4}
+{"ts": 1785326424.1279716, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326425.7495253, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 5}
+{"ts": 1785326426.2646565, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=2", "severity": 4}
+{"ts": 1785326426.2662776, "type": "message", "text": "51)", "severity": 4}
+{"ts": 1785326426.2662776, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 6}
+{"ts": 1785326426.6899545, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 7}
+{"ts": 1785326426.7694607, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326426.7694607, "type": "message", "text": "66)", "severity": 4}
+{"ts": 1785326427.196762, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 8}
+{"ts": 1785326427.3157482, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=2", "severity": 4}
+{"ts": 1785326427.3177536, "type": "message", "text": "00)", "severity": 4}
+{"ts": 1785326428.47636, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326428.47636, "type": "message", "text": "5)", "severity": 4}
+{"ts": 1785326428.9731114, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 9}
+{"ts": 1785326429.3552923, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 10}
+{"ts": 1785326429.402566, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326429.402566, "type": "message", "text": "19)", "severity": 4}
+{"ts": 1785326429.9204736, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=4", "severity": 4}
+{"ts": 1785326429.9204736, "type": "message", "text": "2)", "severity": 4}
+{"ts": 1785326430.2424905, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 11}
+{"ts": 1785326430.9600205, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=6", "severity": 4}
+{"ts": 1785326430.9600205, "type": "message", "text": "8)", "severity": 4}
+{"ts": 1785326438.479567, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326442.633625, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326447.9019582, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326452.7424655, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326455.4235997, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326457.5250673, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326462.7414665, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326467.544113, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326472.8146431, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326477.5535953, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326482.8048542, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326485.9706311, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326487.536934, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326492.7371085, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326497.5689883, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326502.8629944, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326507.5495346, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326512.9182444, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326517.1207721, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326517.6606107, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326522.4253438, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326527.7449782, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326532.4800189, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326537.7663023, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326542.982532, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326547.6981533, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326548.2193208, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326552.9046626, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326557.6412146, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326562.8961363, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326567.6284175, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326572.8793788, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326577.5818949, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326579.223965, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326582.9165623, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326587.5995474, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326592.8169086, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326598.0619054, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326602.7676687, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326608.0367315, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326610.1315455, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326612.7515223, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326617.2108936, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 12}
+{"ts": 1785326617.4839177, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 13}
+{"ts": 1785326617.9489145, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326617.9489145, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326617.9489145, "type": "message", "text": "52)", "severity": 4}
+{"ts": 1785326617.9489145, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=0", "severity": 4}
+{"ts": 1785326617.9489145, "type": "message", "text": ")", "severity": 4}
+{"ts": 1785326618.0703597, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 14}
+{"ts": 1785326619.001745, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=9", "severity": 4}
+{"ts": 1785326619.0025644, "type": "message", "text": "3)", "severity": 4}
+{"ts": 1785326619.0637782, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 15}
+{"ts": 1785326619.2880495, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "sik", "sequence": 16}
+{"ts": 1785326619.5270412, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=5", "severity": 4}
+{"ts": 1785326619.5270412, "type": "message", "text": "1)", "severity": 4}
+{"ts": 1785326619.5270412, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=2", "severity": 4}
+{"ts": 1785326619.5312781, "type": "message", "text": "19)", "severity": 4}
+{"ts": 1785326619.782272, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 17}
+{"ts": 1785326620.0188334, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 18}
+{"ts": 1785326620.2244525, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "sik", "sequence": 19}
+{"ts": 1785326620.588044, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326620.588044, "type": "message", "text": "82)", "severity": 4}
+{"ts": 1785326620.6036828, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=2", "severity": 4}
+{"ts": 1785326620.6036828, "type": "message", "text": "8)", "severity": 4}
+{"ts": 1785326621.1378117, "type": "message", "text": "COMET: MAVLink frame parse failed (len=291 magic=1", "severity": 4}
+{"ts": 1785326621.1378117, "type": "message", "text": "33)", "severity": 4}
+{"ts": 1785326627.522208, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326632.8404212, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326637.5665188, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326641.2501538, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326642.8325408, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326648.043007, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326652.8307147, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326658.0767918, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326662.8536952, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326668.1186335, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326672.3247685, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326672.8492963, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326678.1264596, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326682.889074, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326688.140537, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326692.8279467, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326698.099184, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326702.8699553, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326702.8699553, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326708.1279063, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326712.9271004, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326718.1333363, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326722.8547177, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326728.1425395, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326732.9148746, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326734.0127757, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785326738.2875807, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326743.080083, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326748.349569, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785326753.1267688, "type": "message", "text": "COMET: MAVLink no message received recently", "severity": 4}
+{"ts": 1785332632.6926446, "type": "message", "text": "FC 오류 플래그 발생: VELOCITY_INVALID, ASCENT_TIMEOUT", "severity": 2}
+{"ts": 1785332635.6821678, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785332677.3025603, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785332680.3085563, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785332694.1519964, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785332697.1671813, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785332721.4199872, "type": "message", "text": "LoRa 링크 복귀", "severity": 6}
+{"ts": 1785332723.5366917, "type": "reboot_requested", "success": false, "reason": "sik 연결 없음"}
+{"ts": 1785332724.4257374, "type": "message", "text": "LoRa 링크 끊김 감지", "severity": 4}
+{"ts": 1785332725.15032, "type": "reboot_requested", "success": false, "reason": "sik 연결 없음"}
+{"ts": 1785332731.6035612, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785332732.0631018, "type": "lora_command_result", "command_name": "RELEASE_ALL", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
+{"ts": 1785332732.8664353, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
