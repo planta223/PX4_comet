@@ -14,14 +14,14 @@ CONFIG.SAFETY = {
 CONFIG.SERVO = {
     SERVO_MAIN = {
         ENABLED = true,    -- 현재 사용함
-        FUNCTION_ID = 94,  -- 확인 완료 (Mission Planner에서 SERVO_FUNCTION 파라미터 설정)
+        OUTPUT_CHANNEL = 9,-- Mission Planner 채널 9
         LOCK_PWM = 1000,   -- 각도 검증 필요
         RELEASE_PWM = 2000 -- 각도 검증 필요
     },
 
     SERVO_CANDIDATE = {
         ENABLED = false,   -- 현재 미사용
-        FUNCTION_ID = 95,  -- 확인 완료 (Mission Planner에서 SERVO_FUNCTION 파라미터 설정)
+        OUTPUT_CHANNEL = 10, -- Mission Planner 채널 10
         LOCK_PWM = 1000,   -- 각도 검증 필요
         RELEASE_PWM = 2000 -- 각도 검증 필요
     }

@@ -1,12 +1,13 @@
 -- =====================================================================
 -- Servo (Parachute) Control
 -- =====================================================================
--- comet_config.lua에 정의된 서보별 FUNCTION_ID와 PWM 설정을 이용하여
+-- comet_config.lua에 정의된 서보별 OUTPUT_CHANNEL과 PWM 설정을 이용하여
 -- 낙하산 잠금 및 해제 동작을 수행한다.
 --
--- 실제 PWM 출력은 ArduPilot의 SRV_Channels 인터페이스를 사용하며,
+-- 실제 PWM 출력은 ArduPilot의 SRV_Channels 인터페이스를 사용하여
+-- 물리 출력 채널을 직접 제어한다.
 -- ENABLED=true인 서보만 초기화 및 제어한다.
--- lock_all/release_all은 설정된 모든 서보가 아니라 활성화된 서보만 처리한다.
+-- lock_all/release_all은 활성화된 서보만 처리한다.
 -- =====================================================================
 
 local CONFIG = require("comet_config")
@@ -35,7 +36,10 @@ end
 -- 지정된 서보가 활성화되어 있는지 확인한다.
 local function is_servo_enabled(name, config)
     if config.ENABLED ~= true then
-        gcs:send_text(4, "COMET: [SERVO] " .. name .. " is disabled")
+        gcs:send_text(
+            4,
+            "COMET: [SERVO] " .. name .. " is disabled"
+        )
         return false
     end
 
@@ -43,27 +47,36 @@ local function is_servo_enabled(name, config)
 end
 
 
--- 지정된 서보 기능에 PWM 값을 출력한다.
+-- 지정된 물리 출력 채널에 PWM 값을 출력한다.
 local function set_pwm(name, config, pwm)
     if type(pwm) ~= "number" then
-        gcs:send_text(3, "COMET: [SERVO] Invalid " .. name .. " PWM")
-        return false
-    end
-
-    -- FUNCTION_ID가 실제 출력 채널에 할당되어 있는지 확인한다.
-    local channel =
-        SRV_Channels:find_channel(config.FUNCTION_ID)
-
-    if channel == nil then
         gcs:send_text(
             3,
-            "COMET: [SERVO] " .. name .. " function not assigned"
+            "COMET: [SERVO] Invalid " .. name .. " PWM"
         )
         return false
     end
 
-    SRV_Channels:set_output_pwm(
-        config.FUNCTION_ID,
+    if type(config.OUTPUT_CHANNEL) ~= "number"
+        or config.OUTPUT_CHANNEL < 1
+        or config.OUTPUT_CHANNEL > 16 then
+
+        gcs:send_text(
+            3,
+            "COMET: [SERVO] Invalid "
+                .. name
+                .. " output channel"
+        )
+        return false
+    end
+
+    -- ArduPilot Lua의 채널 인덱스는 0부터 시작한다.
+    -- SERVO9 출력은 channel_index = 8이다.
+    local channel_index =
+        math.floor(config.OUTPUT_CHANNEL) - 1
+
+    SRV_Channels:set_output_pwm_chan(
+        channel_index,
         pwm
     )
 
@@ -76,7 +89,6 @@ local function apply_to_enabled_servos(action)
     local enabled_count = 0
     local all_ok = true
 
-    -- MAIN 설정이 존재하고 활성화된 경우에만 처리한다.
     if SERVO.SERVO_MAIN ~= nil
         and SERVO.SERVO_MAIN.ENABLED == true then
 
@@ -87,7 +99,6 @@ local function apply_to_enabled_servos(action)
         end
     end
 
-    -- CANDIDATE 설정이 존재하고 활성화된 경우에만 처리한다.
     if SERVO.SERVO_CANDIDATE ~= nil
         and SERVO.SERVO_CANDIDATE.ENABLED == true then
 
@@ -99,7 +110,10 @@ local function apply_to_enabled_servos(action)
     end
 
     if enabled_count == 0 then
-        gcs:send_text(3, "COMET: [SERVO] No enabled servo")
+        gcs:send_text(
+            3,
+            "COMET: [SERVO] No enabled servo"
+        )
         return false
     end
 
@@ -115,11 +129,18 @@ function M.initialize()
     local ok = M.lock_all()
 
     if not ok then
-        gcs:send_text(3, "COMET: [SERVO] Servo initialization failed")
+        gcs:send_text(
+            3,
+            "COMET: [SERVO] Servo initialization failed"
+        )
         return false
     end
 
-    gcs:send_text(6, "COMET: [SERVO] Servos initialized")
+    gcs:send_text(
+        6,
+        "COMET: [SERVO] Servos initialized"
+    )
+
     return true
 end
 
