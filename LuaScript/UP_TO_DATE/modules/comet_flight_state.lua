@@ -19,7 +19,6 @@ local ASCENT_TO_DEPLOY = TRANSITION.ASCENT_TO_DEPLOY
 local DEPLOY_TO_DESCENT = TRANSITION.DEPLOY_TO_DESCENT
 local DESCENT_TO_LANDED = TRANSITION.DESCENT_TO_LANDED
 
--- 추후 삭제
 local DEBUG_CONFIG = CONFIG.DEBUG or {}
 
 local M = {}
@@ -55,7 +54,6 @@ M.FAULT = {
 local current_state = M.STATE.READY
 local fault_flags = M.FAULT.NONE
 
-local state_enter_time_ms = 0
 local launch_time_ms = 0
 local maximum_altitude_m = 0.0
 
@@ -145,7 +143,6 @@ local function change_state(new_state, now, reason)
     local old_state = current_state
 
     current_state = new_state
-    state_enter_time_ms = now
 
     gcs:send_text(
         6,
@@ -212,13 +209,17 @@ local function enter_descent(now, reason)
 end
 
 local function request_deploy(now, reason)
-    if not ASCENT_TO_DEPLOY.DEPLOY_ENABLE then
+    local auto_transition_disabled =
+        DEBUG_CONFIG.ENABLE == true
+        and DEBUG_CONFIG.DEPLOY_AUTO_TRANSITION_DISABLE == true
+
+    if auto_transition_disabled then
         if not deploy_disabled_message_sent then
             deploy_disabled_message_sent = true
 
             gcs:send_text(
                 4,
-                "COMET: [FLIGHT] Deploy transition disabled"
+                "COMET: [FLIGHT] Automatic deploy request blocked"
             )
         end
 
@@ -239,11 +240,10 @@ local function enter_landed(now, reason)
     )
 end
 
-local function reset_state(now)
+local function reset_state()
     current_state = M.STATE.READY
     fault_flags = M.FAULT.NONE
 
-    state_enter_time_ms = now
     launch_time_ms = 0
     maximum_altitude_m = 0.0
 
@@ -390,7 +390,9 @@ local function is_servo_command_allowed(command)
 
     -- 디버그 모드에서는 비행 상태 제한만 우회한다.
     -- 존재하지 않거나 비활성화된 서보에 대한 명령은 여전히 거부한다.
-    if DEBUG_CONFIG.SERVO_COMMAND_BYPASS_STATE == true then
+    if DEBUG_CONFIG.ENABLE == true
+        and DEBUG_CONFIG.SERVO_COMMAND_BYPASS_STATE_ENABLE == true then
+
         return true
     end
 
@@ -480,7 +482,7 @@ local function process_lora_command(now, sensor_data)
     if not allowed then
         gcs:send_text(4, "COMET: [FLIGHT] Remote command rejected")
 
-        lora.send_ack(
+        lora.schedule_ack(
             sequence,
             command,
             lora.ACK_RESULT.NOT_ALLOWED
@@ -508,7 +510,7 @@ local function process_lora_command(now, sensor_data)
             )
         end
 
-        lora.send_ack(
+        lora.schedule_ack(
             sequence,
             command,
             lora.ACK_RESULT.EXECUTION_FAILED
@@ -546,7 +548,7 @@ local function process_lora_command(now, sensor_data)
         parachute_deployed = false
     end
 
-    lora.send_ack(
+    lora.schedule_ack(
         sequence,
         command,
         lora.ACK_RESULT.OK
@@ -670,12 +672,19 @@ local function update_ascent(now, sensor_data)
             "maximum ascent time reached"
         )
 
-        gcs:send_text(4, "COMET: [FLIGHT] Deploy fallback by timeout")
+        local transitioned =
+            request_deploy(
+                now,
+                "maximum ascent time"
+            )
 
-        request_deploy(
-            now,
-            "maximum ascent time"
-        )
+        if transitioned then
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Deploy fallback by timeout"
+            )
+        end
+
         return
     end
 
@@ -749,12 +758,18 @@ local function update_ascent(now, sensor_data)
     if descent_speed_confirm_count
         >= ASCENT_TO_DEPLOY.DESCENT_SPEED_CONFIRM_COUNT then
 
-        gcs:send_text(6, "COMET: [FLIGHT] Descent condition confirmed")
+        local transitioned =
+            request_deploy(
+                now,
+                "descent speed and altitude"
+            )
 
-        request_deploy(
-            now,
-            "descent speed and altitude"
-        )
+        if transitioned then
+            gcs:send_text(
+                6,
+                "COMET: [FLIGHT] Descent condition confirmed"
+            )
+        end
     end
 end
 
@@ -921,14 +936,57 @@ end
 -- ---------------------------------------------------------------------
 
 function M.initialize(now)
-    reset_state(now or 0)
+    reset_state()
 
-    gcs:send_text(6, "COMET: [FLIGHT] Flight state initialized")
+    gcs:send_text(
+        6,
+        "COMET: [FLIGHT] Flight state initialized"
+    )
 
-    if ASCENT_TO_DEPLOY.DEPLOY_ENABLE then
-        gcs:send_text(6, "COMET: [FLIGHT] Deploy output enabled")
+    if DEBUG_CONFIG.ENABLE == true then
+        gcs:send_text(
+            4,
+            "COMET: [FLIGHT] Debug mode enabled"
+        )
+
+        if DEBUG_CONFIG.SERVO_COMMAND_BYPASS_STATE_ENABLE == true then
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Servo command state bypass enabled"
+            )
+        else
+            gcs:send_text(
+                6,
+                "COMET: [FLIGHT] Servo command state bypass disabled"
+            )
+        end
+
+        if DEBUG_CONFIG.DEPLOY_AUTO_TRANSITION_DISABLE == true then
+            gcs:send_text(
+                4,
+                "COMET: [FLIGHT] Automatic deploy transition disabled"
+            )
+        else
+            gcs:send_text(
+                6,
+                "COMET: [FLIGHT] Automatic deploy transition enabled"
+            )
+        end
     else
-        gcs:send_text(4, "COMET: [FLIGHT] Deploy output disabled")
+        gcs:send_text(
+            6,
+            "COMET: [FLIGHT] Debug mode disabled"
+        )
+
+        gcs:send_text(
+            6,
+            "COMET: [FLIGHT] Servo command state bypass disabled"
+        )
+
+        gcs:send_text(
+            6,
+            "COMET: [FLIGHT] Automatic deploy transition enabled"
+        )
     end
 
     return true
@@ -1016,7 +1074,7 @@ function M.reset(now)
         return false
     end
 
-    reset_state(now or 0)
+    reset_state()
 
     gcs:send_text(6, "COMET: [FLIGHT] Flight state reset")
     return true

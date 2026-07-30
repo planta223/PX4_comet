@@ -5,7 +5,7 @@
 -- 설정된 주기에 따라 전체 시스템 업데이트 순서를 관리한다.
 --
 -- 메인 루프 처리 순서:
--- 센서 갱신 → LoRa 명령 수신 → 비행 상태 갱신 → 텔레메트리 송신
+-- 센서 갱신 → LoRa 명령 수신 → 비행 상태 및 명령 처리 → LoRa 송신 스케줄 처리
 -- =====================================================================
 
 local CONFIG = require("comet_config")
@@ -94,14 +94,12 @@ local function update()
     -- 2. LoRa 명령 수신
     lora.receive()
 
-    -- 3. 비행 상태 및 낙하산 제어 갱신
-    flight.update(
-        now,
-        sensor_data
-    )
+    -- 3. 수신 명령 처리 및 비행 상태 갱신
+    -- -- 명령 처리 결과 ACK는 즉시 송신하지 않고 LoRa ACK 버퍼에 저장한다.
+    flight.update(now, sensor_data)
 
-    -- 4. 갱신된 비행 상태와 센서 정보를 LoRa로 송신
-    lora.send_telemetry_if_due(
+    -- 4. 텔레메트리 및 ACK 송신 스케줄 처리
+    lora.update_tx(
         now,
         sensor_data,
         flight.get_state(),

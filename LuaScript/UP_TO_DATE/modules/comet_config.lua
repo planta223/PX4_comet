@@ -4,22 +4,24 @@
 
 local CONFIG = {}
 
-CONFIG.UPDATE_PERIOD_MS = 50
 
-CONFIG.SAFETY = {
-    MAX_TILT_DEG = 70.0, -- 현재 미사용
-    SENSOR_TIMEOUT_MS = 1500
-}
+CONFIG.UPDATE_PERIOD_MS = 10
+CONFIG.TELEMETRY_PERIOD_MS = 100
+CONFIG.ACK_DELAY_AFTER_TELEMETRY_MS = 60
+CONFIG.ACK_GUARD_BEFORE_TELEMETRY_MS = 15
 
--- 이건 추후 삭제
+
 CONFIG.DEBUG = {
-    -- true:
+    -- 전체 디버그 기능 활성화 여부
+    ENABLE = true,
+
     -- 비행 상태와 관계없이 LoRa 서보 LOCK/RELEASE 명령 허용
-    --
-    -- false:
-    -- 정상 비행 상태 제한 적용
-    SERVO_COMMAND_BYPASS_STATE = true
+    SERVO_COMMAND_BYPASS_STATE_ENABLE = true,
+
+    -- 센서 조건 및 timeout에 의한 자동 ASCENT → DEPLOY 전이 차단
+    DEPLOY_AUTO_TRANSITION_DISABLE = true
 }
+
 
 CONFIG.SERVO = {
     SERVO_MAIN = {
@@ -37,18 +39,10 @@ CONFIG.SERVO = {
     }
 }
 
+
 CONFIG.LORA = {
     SERIAL_INSTANCE = 0,     -- SERIALx_PROTOCOL이 28인 포트들을 찾는다. (Mission Planner에서 LORA 28, SiK 2 설정)
     BAUD = 9600,
-
-    FAST_PERIOD_MS   = 250,  -- 빠른 전송 주기 (예: 비행 중)
-    NORMAL_PERIOD_MS = 1000, -- 일반 전송 주기 (예: 지상에서)
-
-    -- 지상 LoRa 처리량/손실률 시험용 고정 텔레메트리 주기
-    TEST = {
-        ENABLED = true,
-        PERIOD_MS = 275
-    },
 
     TELEMETRY_HEADER  = 0xA5,
     COMMAND_HEADER    = 0x5A,
@@ -65,6 +59,7 @@ CONFIG.LORA = {
     ACK_LENGTH        = 4,   -- header(1) + sequence(1) + ack_result(1) + crc8(1)
 }
 
+
 CONFIG.TRANSITION = {
     READY_TO_ASCENT = {
         -- 정상 전이
@@ -77,9 +72,6 @@ CONFIG.TRANSITION = {
     },
 
     ASCENT_TO_DEPLOY = {
-        -- 지상 디버깅용
-        DEPLOY_ENABLE = false,
-
         -- 정상 전이
         MIN_TIME_AFTER_LAUNCH_MS = 1000,
         MIN_DESCENT_SPEED_MPS = 1.0,
@@ -105,7 +97,7 @@ CONFIG.TRANSITION = {
         MAX_ABS_VERTICAL_SPEED_MPS = 1.5,
         MIN_ACCEL_MPS2 = 8.0,
         MAX_ACCEL_MPS2 = 12.0,
-        LANDED_CONFIRM_COUNT = 40
+        LANDED_CONFIRM_COUNT = 200
     }
 }
 
