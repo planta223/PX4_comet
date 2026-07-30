@@ -7,8 +7,6 @@ Parameter:
 항공측 설정값:
 CONFIG.UPDATE_PERIOD_MS = 10
 CONFIG.TELEMETRY_PERIOD_MS = 100
-CONFIG.ACK_DELAY_AFTER_TELEMETRY_MS = 60
-CONFIG.ACK_GUARD_BEFORE_TELEMETRY_MS = 20
 
 지상국 설정값:
 COMMAND_DELAY_AFTER_TELEMETRY_MS = 10
@@ -16,30 +14,101 @@ ACK_TIMEOUT_MS = 250
 
 ====================================
 
+ACK 관련:
+
+별도 ACK 패킷은 사용하지 않으며, telemetry에 ack_sequence 및 ack_result를 포함한다.
+ACK result:
+- 0x00: OK
+- 0x01: INVALID_COMMAND
+- 0x02: NOT_ALLOWED
+- 0x03: EXECUTION_FAILED
+- 0xFF: NONE
+
+====================================
+
 정상 상황:
 
-- 지상국 cmd 송신 -> 항공측 cmd 수신 -> 항공측 ack 송신 -> 지상국 ack 수신
+- 항공측은 telemetry를 100 ms 주기로 송신한다.
 
-- 지상국은 항공측 telemetry 패킷을 완전히 수신한 시점으로부터 10 ms 후에 CMD를 송신한다.
+- 지상국은 항공측 telemetry 패킷을 완전히 수신한 시점으로부터
+  10 ms 후에 CMD를 송신한다.
 
-- 9600baud 기준 이상적인 UART 전송시간은 34바이트 35.4ms이고, 4바이트 4.17ms임을 유의하라.
+- 9600 baud 기준 이상적인 UART 전송시간은
+  36바이트 약 37.5 ms,
+  4바이트 약 4.17 ms임을 유의한다.
 
-- 항공측은 CMD 수신 직후 ACK를 송신하지 않는다.
-  항공측은 CMD 처리 결과를 버퍼에 임시 저장하고, 다음 telemetry 송신 시작 이후 60 ms 시점에 ACK를 송신한다.
-  이때 항공측 스케줄 지연으로 인해 ACK 송신 가능 시점이 다다음 telemetry 송신 시작 전 20 ms 이내에 진입한 경우,
-  해당 ACK는 송신하지 않고 다다음 telemetry 송신 이후의 ACK 슬롯으로 연기한다.
+- 항공측은 CMD를 수신한 뒤 상태머신에서 명령을 처리한다.
 
-- 지상국은 ACK를 수신하거나 timeout이 발생하기 전까지 새로운 CMD를 송신하지 않는다.
+- 항공측은 CMD 처리 결과를 다음 변수에 저장한다.
+
+  last_ack_sequence
+  last_ack_command
+  last_ack_result
+
+- 이후 송신되는 모든 telemetry 패킷에
+  last_ack_sequence와 last_ack_result를 포함한다.
+
+- 지상국은 telemetry에 포함된 ack_sequence가
+  현재 대기 중인 CMD sequence와 일치하면 ACK를 수신한 것으로 판단한다.
+
+- 지상국은 ACK를 확인하거나 timeout이 발생하기 전까지
+  새로운 CMD를 송신하지 않는다.
+
+- 항공측은 ACK 정보를 한 번 telemetry에 포함한 뒤 삭제하지 않는다.
+  마지막 CMD 처리 결과를 이후 telemetry에도 계속 포함한다.
+
+====================================
+
+중복 CMD 처리:
+
+- 지상국이 timeout 후 CMD를 수동 재전송할 경우,
+  반드시 기존과 동일한 command_sequence와 command를 사용한다.
+
+- 항공측은 다음 조건을 모두 만족하면 중복 CMD로 판단한다.
+
+  sequence == last_ack_sequence
+  command == last_ack_command
+
+- 중복 CMD는 다시 실행하지 않는다.
+
+- 항공측은 기존 last_ack_result를 유지한다.
+
+- 따라서 중복 CMD 수신 이후에도 다음 telemetry에서
+  기존 ACK 결과가 다시 전달된다.
 
 ====================================
 
 비정상 상황:
 
 1. 지상국이 CMD를 송신했으나 항공측이 수신하지 못한 경우
-2. 항공측이 CMD를 수신하고 처리한 뒤 ACK를 송신했으나, 지상국이 ACK를 수신하지 못한 경우
-3. 항공측이 ACK를 예정된 슬롯에서 송신하지 못한 경우
 
-1,2,3 모두 지상국 timeout 이후 지상국 수동 CMD 재전송 해야 한다.
+- 항공측의 last_ack_sequence와 last_ack_result가 갱신되지 않는다.
+- 지상국은 일치하는 ACK를 수신하지 못한다.
+- ACK_TIMEOUT_MS 이후 timeout 처리한다.
+- 사용자가 동일 sequence와 command로 수동 재전송한다.
+
+2. 항공측이 CMD를 수신하고 처리했으나
+   ACK 정보가 포함된 telemetry를 지상국이 수신하지 못한 경우
+
+- 항공측은 ACK 정보를 삭제하지 않는다.
+- 다음 telemetry에도 동일한 ack_sequence와 ack_result가 포함된다.
+- 지상국은 이후 telemetry에서 ACK를 확인할 수 있다.
+
+3. 지상국이 timeout 처리한 뒤,
+   실제로는 항공측에서 CMD가 이미 처리된 경우
+
+- 지상국은 동일 sequence와 command로 CMD를 수동 재전송한다.
+- 항공측은 중복 CMD로 판정한다.
+- 명령을 다시 실행하지 않는다.
+- 기존 ACK 결과를 telemetry에 계속 포함한다.
+
+4. 항공측이 알 수 없는 command 값을 수신한 경우
+
+- 명령을 실행하지 않는다.
+- last_ack_sequence에 수신 sequence를 저장한다.
+- last_ack_command에 수신 command를 저장한다.
+- last_ack_result를 INVALID_COMMAND로 저장한다.
+- 이후 telemetry를 통해 결과를 전달한다.
 
 ====================================
 

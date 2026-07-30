@@ -95,7 +95,8 @@ local function update()
     lora.receive()
 
     -- 3. 수신 명령 처리 및 비행 상태 갱신
-    -- -- 명령 처리 결과 ACK는 즉시 송신하지 않고 LoRa ACK 버퍼에 저장한다.
+    -- 명령 처리 결과는 LoRa 모듈에 저장되며
+    -- 이후 telemetry 패킷에 포함된다.
     flight.update(now, sensor_data)
 
     -- 4. 텔레메트리 및 ACK 송신 스케줄 처리

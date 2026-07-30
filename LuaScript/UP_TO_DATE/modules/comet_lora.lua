@@ -1,12 +1,14 @@
 -- =====================================================================
 -- LoRa Communication
 -- =====================================================================
--- LoRa UART를 통해 지상국 명령을 수신하고 ACK를 반환하며,
--- 센서 및 비행 상태 정보를 바이너리 텔레메트리 패킷으로 송신한다.
+-- LoRa UART를 통해 지상국 명령을 수신하고,
+-- 센서 및 비행 상태 정보와 마지막 CMD 처리 결과를
+-- 바이너리 텔레메트리 패킷으로 송신한다.
 --
--- 명령 수신과 텔레메트리 송신을 분리하여 메인 루프에서 다음 순서로
--- 처리할 수 있도록 한다.
+-- 별도의 ACK 패킷은 사용하지 않는다.
+-- CMD 처리 결과는 이후 송신되는 telemetry에 반복 포함한다.
 --
+-- 메인 루프 처리 순서:
 -- 센서 갱신 → 명령 수신 → 상태머신 처리 → 텔레메트리 송신
 -- =====================================================================
 
@@ -30,25 +32,12 @@ local rx_index = 1
 local pending_command = nil
 
 
--- 아직 송신되지 않은 ACK
-local pending_ack = nil
-
--- ACK 송신 예정 시각
-local ack_due_ms = nil
-
--- CMD 처리 이후 다음 telemetry 송신을 기다리는 상태
-local ack_wait_for_next_telemetry = false
-
--- ACK가 보호구간에 걸려 연기됐는지 여부
-local ack_deferred = false
-
-
 -- 마지막으로 처리한 CMD와 결과
--- 동일 sequence + command가 수동 재전송됐을 때
--- 명령을 재실행하지 않고 기존 ACK만 다시 예약하기 위해 유지
-local last_ack_sequence = nil
+-- 동일 sequence + command가 수동 재전송되면
+-- 명령을 재실행하지 않고 기존 결과를 telemetry에 다시 포함한다.
+local last_ack_sequence = 0
 local last_ack_command = nil
-local last_ack_result = nil
+local last_ack_result = 0xFF
 
 
 -- telemetry 송신 상태
@@ -74,11 +63,15 @@ M.COMMAND = {
     FORCE_LANDED = 10
 }
 
+
 M.ACK_RESULT = {
     OK = 0,
     INVALID_COMMAND = 1,
     NOT_ALLOWED = 2,
-    EXECUTION_FAILED = 3
+    EXECUTION_FAILED = 3,
+
+    -- 아직 처리된 CMD가 없음
+    NONE = 0xFF
 }
 
 
@@ -172,7 +165,8 @@ local function append_i16(packet, value)
     value = value % 65536
 
     packet[#packet + 1] = value % 256
-    packet[#packet + 1] = math.floor(value / 256) % 256
+    packet[#packet + 1] =
+        math.floor(value / 256) % 256
 end
 
 
@@ -180,47 +174,37 @@ local function append_u32(packet, value)
     value = math.floor(value) % 4294967296
 
     packet[#packet + 1] = value % 256
-    packet[#packet + 1] = math.floor(value / 256) % 256
-    packet[#packet + 1] = math.floor(value / 65536) % 256
-    packet[#packet + 1] = math.floor(value / 16777216) % 256
+    packet[#packet + 1] =
+        math.floor(value / 256) % 256
+    packet[#packet + 1] =
+        math.floor(value / 65536) % 256
+    packet[#packet + 1] =
+        math.floor(value / 16777216) % 256
 end
 
 
 local function append_i32(packet, value)
-    value = clamp(round(value), -2147483648, 2147483647)
+    value = clamp(
+        round(value),
+        -2147483648,
+        2147483647
+    )
+
     value = value % 4294967296
 
     packet[#packet + 1] = value % 256
-    packet[#packet + 1] = math.floor(value / 256) % 256
-    packet[#packet + 1] = math.floor(value / 65536) % 256
-    packet[#packet + 1] = math.floor(value / 16777216) % 256
+    packet[#packet + 1] =
+        math.floor(value / 256) % 256
+    packet[#packet + 1] =
+        math.floor(value / 65536) % 256
+    packet[#packet + 1] =
+        math.floor(value / 16777216) % 256
 end
 
 
 -- ---------------------------------------------------------------------
 -- Command reception
 -- ---------------------------------------------------------------------
-
--- 이미 처리한 동일 CMD가 재전송된 경우,
--- 명령을 다시 실행하지 않고 기존 ACK 결과만 재예약한다.
-local function reschedule_last_ack()
-    if last_ack_sequence == nil then
-        return false
-    end
-
-    pending_ack = {
-        sequence = last_ack_sequence,
-        command = last_ack_command,
-        result = last_ack_result
-    }
-
-    ack_due_ms = nil
-    ack_wait_for_next_telemetry = true
-    ack_deferred = false
-
-    return true
-end
-
 
 local function process_command_packet()
     local header = rx_buffer[1]
@@ -239,7 +223,10 @@ local function process_command_packet()
         )
 
     if received_crc ~= expected_crc then
-        gcs:send_text(4, "COMET: [LORA] Command CRC error")
+        gcs:send_text(
+            4,
+            "COMET: [LORA] Command CRC error"
+        )
         return
     end
 
@@ -248,6 +235,7 @@ local function process_command_packet()
         "COMET: [LORA] Command CRC valid"
     )
 
+    -- 지원하지 않는 명령값
     if command < M.COMMAND.SERVO_MAIN_LOCK
         or command > M.COMMAND.FORCE_LANDED then
 
@@ -256,20 +244,33 @@ local function process_command_packet()
             command,
             M.ACK_RESULT.INVALID_COMMAND
         )
+
         return
     end
 
-    -- 이미 처리한 동일 명령이 재전송되면 기존 ACK만 다시 전송한다.
-    if last_ack_sequence == sequence
+    -- 동일 sequence + command가 재수신된 경우
+    -- 이미 처리된 명령이므로 다시 실행하지 않는다.
+    -- 기존 ACK 결과가 이후 telemetry에 계속 포함된다.
+    if last_ack_result ~= M.ACK_RESULT.NONE
+        and last_ack_sequence == sequence
         and last_ack_command == command then
 
-        -- 명령은 다시 실행하지 않고 기존 ACK만 재예약한다.
-        reschedule_last_ack()
+        gcs:send_text(
+            6,
+            "COMET: [LORA] Duplicate command received"
+        )
+
         return
     end
 
-    -- 상태머신이 아직 이전 명령을 처리하지 않았다면 새 명령을 보류한다.
+    -- 상태머신이 아직 이전 명령을 처리하지 않았다면
+    -- 새로운 명령을 받지 않는다.
     if pending_command ~= nil then
+        gcs:send_text(
+            4,
+            "COMET: [LORA] Command pending"
+        )
+
         return
     end
 
@@ -281,6 +282,7 @@ end
 
 
 local function process_received_byte(byte)
+    -- CMD 헤더를 찾을 때까지 바이트를 무시한다.
     if rx_index == 1
         and byte ~= LORA.COMMAND_HEADER then
 
@@ -317,6 +319,7 @@ local function receive_commands()
         process_received_byte(byte)
     end
 
+    -- 통신 시험 종료 후 삭제 가능
     if received_count > 0 then
         gcs:send_text(
             6,
@@ -346,170 +349,101 @@ local function send_telemetry(
 
     local packet = {}
 
+    -- 기본 상태
     append_u8(packet, LORA.TELEMETRY_HEADER)
     append_u8(packet, telemetry_sequence)
     append_u8(packet, flight_state or 0)
     append_u8(packet, status_flags or 0)
     append_u8(packet, fault_flags or 0)
+
+    -- 시스템 시간
     append_u32(packet, now)
 
     -- latitude, longitude: deg × 1e7
     -- altitude: relative m × 100
     append_i32(
         packet,
-        (sensor_data.latitude or 0) * 10000000
+        (sensor_data.latitude or 0)
+            * 10000000
     )
 
     append_i32(
         packet,
-        (sensor_data.longitude or 0) * 10000000
+        (sensor_data.longitude or 0)
+            * 10000000
     )
 
     append_i32(
         packet,
-        (sensor_data.altitude or 0) * 100
+        (sensor_data.altitude or 0)
+            * 100
     )
 
     -- NED velocity: m/s × 10
     append_i16(
         packet,
-        (sensor_data.velocity_n or 0) * 10
+        (sensor_data.velocity_n or 0)
+            * 10
     )
 
     append_i16(
         packet,
-        (sensor_data.velocity_e or 0) * 10
+        (sensor_data.velocity_e or 0)
+            * 10
     )
 
     append_i16(
         packet,
-        (sensor_data.velocity_d or 0) * 10
+        (sensor_data.velocity_d or 0)
+            * 10
     )
 
     -- attitude: deg × 100
     append_i16(
         packet,
-        (sensor_data.roll or 0) * 100
+        (sensor_data.roll or 0)
+            * 100
     )
 
     append_i16(
         packet,
-        (sensor_data.pitch or 0) * 100
+        (sensor_data.pitch or 0)
+            * 100
     )
 
     local yaw =
-        normalize_yaw_deg(sensor_data.yaw or 0)
+        normalize_yaw_deg(
+            sensor_data.yaw or 0
+        )
 
     append_i16(packet, yaw * 100)
 
+    -- 마지막 CMD 처리 결과
+    -- 유효한 CMD가 아직 없으면:
+    -- ack_sequence = 0
+    -- ack_result = 0xFF
+    append_u8(packet, last_ack_sequence)
+    append_u8(packet, last_ack_result)
+
+    -- CRC를 제외한 길이가 35바이트인지 검사한다.
     if #packet ~= LORA.TELEMETRY_LENGTH - 1 then
         gcs:send_text(
             3,
             "COMET: [LORA] Invalid telemetry packet length"
         )
+
         return false
     end
 
-    packet[#packet + 1] =
+    append_u8(
+        packet,
         calculate_crc8(
             packet,
             LORA.TELEMETRY_LENGTH - 1
         )
+    )
 
     return send_packet(packet)
-end
-
-
--- ACK 패킷을 실제 UART로 송신한다.
-local function send_ack_packet(sequence, result)
-    if port == nil then
-        return false
-    end
-
-    local packet = {
-        LORA.ACK_HEADER,
-        sequence,
-        result
-    }
-
-    packet[LORA.ACK_LENGTH] =
-        calculate_crc8(
-            packet,
-            LORA.ACK_LENGTH - 1
-        )
-
-    return send_packet(packet)
-end
-
-
--- 예약된 ACK를 지정된 슬롯에서 송신한다.
-local function send_ack_if_due(now)
-    if pending_ack == nil then
-        return true
-    end
-
-    -- CMD 처리 후 아직 다음 telemetry가 송신되지 않았다.
-    if ack_wait_for_next_telemetry then
-        return true
-    end
-
-    if ack_due_ms == nil or now < ack_due_ms then
-        return true
-    end
-
-    local next_telemetry_ms =
-        last_telemetry_ms
-        + CONFIG.TELEMETRY_PERIOD_MS
-
-    local time_until_next_telemetry =
-        next_telemetry_ms - now
-
-    -- 다음 telemetry 직전 보호구간이면 ACK를 연기한다.
-    if time_until_next_telemetry
-        <= CONFIG.ACK_GUARD_BEFORE_TELEMETRY_MS then
-
-        if not ack_deferred then
-            ack_deferred = true
-            ack_wait_for_next_telemetry = true
-            ack_due_ms = nil
-
-            gcs:send_text(
-                4,
-                "COMET: [LORA] ACK deferred"
-            )
-
-            return true
-        end
-
-        -- 이미 한 번 연기된 ACK라면 폐기한다.
-        gcs:send_text(
-            4,
-            "COMET: [LORA] ACK slot missed"
-        )
-
-        pending_ack = nil
-        ack_due_ms = nil
-        ack_wait_for_next_telemetry = false
-        ack_deferred = false
-
-        -- last_ack_*는 유지한다.
-        return false
-    end
-
-    local sent =
-        send_ack_packet(
-            pending_ack.sequence,
-            pending_ack.result
-        )
-
-    if sent then
-        pending_ack = nil
-        ack_due_ms = nil
-        ack_wait_for_next_telemetry = false
-        ack_deferred = false
-    end
-
-    return sent
 end
 
 
@@ -518,10 +452,17 @@ end
 -- ---------------------------------------------------------------------
 
 function M.initialize()
-    port = serial:find_serial(LORA.SERIAL_INSTANCE)
+    port =
+        serial:find_serial(
+            LORA.SERIAL_INSTANCE
+        )
 
     if port == nil then
-        gcs:send_text(3, "COMET: [LORA] Initialization failed")
+        gcs:send_text(
+            3,
+            "COMET: [LORA] Initialization failed"
+        )
+
         return false
     end
 
@@ -532,19 +473,18 @@ function M.initialize()
     rx_index = 1
     pending_command = nil
 
-    pending_ack = nil
-    ack_due_ms = nil
-    ack_wait_for_next_telemetry = false
-    ack_deferred = false
-
-    last_ack_sequence = nil
+    last_ack_sequence = 0
     last_ack_command = nil
-    last_ack_result = nil
+    last_ack_result = M.ACK_RESULT.NONE
 
     telemetry_sequence = 0
     last_telemetry_ms = 0
 
-    gcs:send_text(6, "COMET: [LORA] Initialized")
+    gcs:send_text(
+        6,
+        "COMET: [LORA] Initialized"
+    )
+
     return true
 end
 
@@ -554,27 +494,28 @@ function M.receive()
 end
 
 
--- CMD 처리 결과를 저장하고 ACK 송신을 예약한다.
+-- CMD 처리 결과를 저장한다.
+-- 저장된 결과는 이후 telemetry에 반복 포함된다.
 function M.schedule_ack(sequence, command, result)
     if port == nil then
         return false
     end
 
-    -- 마지막 처리 결과 저장
-    last_ack_sequence = sequence
+    if sequence == nil
+        or command == nil
+        or result == nil then
+
+        gcs:send_text(
+            3,
+            "COMET: [LORA] Invalid ACK result"
+        )
+
+        return false
+    end
+
+    last_ack_sequence = sequence % 256
     last_ack_command = command
-    last_ack_result = result
-
-    -- 실제 ACK 송신은 다음 telemetry 이후 수행
-    pending_ack = {
-        sequence = sequence,
-        command = command,
-        result = result
-    }
-
-    ack_due_ms = nil
-    ack_wait_for_next_telemetry = true
-    ack_deferred = false
+    last_ack_result = result % 256
 
     return true
 end
@@ -597,13 +538,14 @@ function M.send_telemetry_if_due(
         return true
     end
 
-    local sent = send_telemetry(
-        now,
-        sensor_data,
-        flight_state,
-        status_flags,
-        fault_flags
-    )
+    local sent =
+        send_telemetry(
+            now,
+            sensor_data,
+            flight_state,
+            status_flags,
+            fault_flags
+        )
 
     if not sent then
         return false
@@ -613,18 +555,6 @@ function M.send_telemetry_if_due(
 
     telemetry_sequence =
         (telemetry_sequence + 1) % 256
-
-    -- CMD 처리 이후 처음 송신된 telemetry를 기준으로
-    -- ACK 송신 시점을 설정한다.
-    if pending_ack ~= nil
-        and ack_wait_for_next_telemetry then
-
-        ack_wait_for_next_telemetry = false
-
-        ack_due_ms =
-            now
-            + CONFIG.ACK_DELAY_AFTER_TELEMETRY_MS
-    end
 
     return true
 end
@@ -637,21 +567,15 @@ function M.update_tx(
     status_flags,
     fault_flags
 )
-    -- 동일 주기에 telemetry와 ACK가 모두 due이면
-    -- telemetry를 먼저 처리한다.
-    local telemetry_ok =
-        M.send_telemetry_if_due(
-            now,
-            sensor_data,
-            flight_state,
-            status_flags,
-            fault_flags
-        )
-
-    local ack_ok =
-        send_ack_if_due(now)
-
-    return telemetry_ok and ack_ok
+    -- 별도 ACK 패킷은 송신하지 않는다.
+    -- 마지막 CMD 처리 결과는 telemetry에 포함된다.
+    return M.send_telemetry_if_due(
+        now,
+        sensor_data,
+        flight_state,
+        status_flags,
+        fault_flags
+    )
 end
 
 

@@ -7,8 +7,6 @@ local CONFIG = {}
 
 CONFIG.UPDATE_PERIOD_MS = 10
 CONFIG.TELEMETRY_PERIOD_MS = 100
-CONFIG.ACK_DELAY_AFTER_TELEMETRY_MS = 60
-CONFIG.ACK_GUARD_BEFORE_TELEMETRY_MS = 15
 
 
 CONFIG.DEBUG = {
@@ -46,17 +44,32 @@ CONFIG.LORA = {
 
     TELEMETRY_HEADER  = 0xA5,
     COMMAND_HEADER    = 0x5A,
-    ACK_HEADER        = 0xA6,
 
-    TELEMETRY_LENGTH = 34,  -- header(1) + sequence(1) + flight_state(1) + status_flags(1)
-                            -- + fault_flags(1)
-                            -- + time_ms(4)
-                            -- + latitude(4) + longitude(4) + altitude(4)
-                            -- + velocity_n(2) + velocity_e(2) + velocity_d(2)
-                            -- + roll(2) + pitch(2) + yaw(2)
-                            -- + crc8(1)
-    COMMAND_LENGTH    = 4,   -- header(1) + sequence(1) + command(1) + crc8(1)
-    ACK_LENGTH        = 4,   -- header(1) + sequence(1) + ack_result(1) + crc8(1)
+    TELEMETRY_LENGTH = 36,
+    -- header(1)
+    -- + telemetry_sequence(1)
+    -- + flight_state(1)
+    -- + status_flags(1)
+    -- + fault_flags(1)
+    -- + time_ms(4)
+    -- + latitude(4)
+    -- + longitude(4)
+    -- + altitude(4)
+    -- + velocity_n(2)
+    -- + velocity_e(2)
+    -- + velocity_d(2)
+    -- + roll(2)
+    -- + pitch(2)
+    -- + yaw(2)
+    -- + ack_sequence(1)
+    -- + ack_result(1)
+    -- + crc8(1)
+
+    COMMAND_LENGTH    = 4
+    -- header(1)
+    -- + command_sequence(1)
+    -- + command(1)
+    -- + crc8(1)
 }
 
 
