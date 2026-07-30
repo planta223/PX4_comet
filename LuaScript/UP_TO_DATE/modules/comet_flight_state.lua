@@ -366,6 +366,7 @@ end
 
 
 local function is_servo_command_allowed(command)
+    -- 개별 메인 서보 명령은 메인 서보가 활성화되어 있어야 한다.
     if command == lora.COMMAND.SERVO_MAIN_LOCK
         or command == lora.COMMAND.SERVO_MAIN_RELEASE then
 
@@ -376,6 +377,7 @@ local function is_servo_command_allowed(command)
         end
     end
 
+    -- 개별 후보 서보 명령은 후보 서보가 활성화되어 있어야 한다.
     if command == lora.COMMAND.SERVO_CANDIDATE_LOCK
         or command == lora.COMMAND.SERVO_CANDIDATE_RELEASE then
 
@@ -386,11 +388,19 @@ local function is_servo_command_allowed(command)
         end
     end
 
+    -- 디버그 모드에서는 비행 상태 제한만 우회한다.
+    -- 존재하지 않거나 비활성화된 서보에 대한 명령은 여전히 거부한다.
+    if DEBUG_CONFIG.SERVO_COMMAND_BYPASS_STATE == true then
+        return true
+    end
+
+    -- 정상 운용: LOCK은 지상 상태에서만 허용한다.
     if is_lock_command(command) then
         return current_state == M.STATE.READY
             or current_state == M.STATE.LANDED
     end
 
+    -- 정상 운용: RELEASE는 비행 중에만 허용한다.
     if is_release_command(command) then
         return current_state == M.STATE.ASCENT
             or current_state == M.STATE.DEPLOY
