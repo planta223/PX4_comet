@@ -243,6 +243,11 @@ local function process_command_packet()
         return
     end
 
+    gcs:send_text(
+        6,
+        "COMET: [LORA] Command CRC valid"
+    )
+
     if command < M.COMMAND.SERVO_MAIN_LOCK
         or command > M.COMMAND.FORCE_LANDED then
 
@@ -299,6 +304,8 @@ local function receive_commands()
         return false
     end
 
+    local received_count = 0
+
     while port:available() > 0 do
         local byte = port:read()
 
@@ -306,7 +313,16 @@ local function receive_commands()
             break
         end
 
+        received_count = received_count + 1
         process_received_byte(byte)
+    end
+
+    if received_count > 0 then
+        gcs:send_text(
+            6,
+            "COMET: [LORA] RX bytes "
+                .. tostring(received_count)
+        )
     end
 
     return true
