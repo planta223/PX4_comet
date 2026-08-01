@@ -1,0 +1,78 @@
+<description_lora>
+
+====================================
+
+Parameter:
+
+항공측 설정값:
+CONFIG.UPDATE_PERIOD_MS = 10
+CONFIG.TELEMETRY_PERIOD_MS = 100
+CONFIG.ACK_DELAY_AFTER_TELEMETRY_MS = 60
+CONFIG.ACK_GUARD_BEFORE_TELEMETRY_MS = 20
+
+지상국 설정값:
+COMMAND_DELAY_AFTER_TELEMETRY_MS = 10
+ACK_TIMEOUT_MS = 250
+
+====================================
+
+정상 상황:
+
+- 지상국 cmd 송신 -> 항공측 cmd 수신 -> 항공측 ack 송신 -> 지상국 ack 수신
+
+- 지상국은 항공측 telemetry 패킷을 완전히 수신한 시점으로부터 10 ms 후에 CMD를 송신한다.
+
+- 9600baud 기준 이상적인 UART 전송시간은 34바이트 35.4ms이고, 4바이트 4.17ms임을 유의하라.
+
+- 항공측은 CMD 수신 직후 ACK를 송신하지 않는다.
+  항공측은 CMD 처리 결과를 버퍼에 임시 저장하고, 다음 telemetry 송신 시작 이후 60 ms 시점에 ACK를 송신한다.
+  이때 항공측 스케줄 지연으로 인해 ACK 송신 가능 시점이 다다음 telemetry 송신 시작 전 20 ms 이내에 진입한 경우,
+  해당 ACK는 송신하지 않고 다다음 telemetry 송신 이후의 ACK 슬롯으로 연기한다.
+
+- 지상국은 ACK를 수신하거나 timeout이 발생하기 전까지 새로운 CMD를 송신하지 않는다.
+
+====================================
+
+비정상 상황:
+
+1. 지상국이 CMD를 송신했으나 항공측이 수신하지 못한 경우
+2. 항공측이 CMD를 수신하고 처리한 뒤 ACK를 송신했으나, 지상국이 ACK를 수신하지 못한 경우
+3. 항공측이 ACK를 예정된 슬롯에서 송신하지 못한 경우
+
+1,2,3 모두 지상국 timeout 이후 지상국 수동 CMD 재전송 해야 한다.
+
+====================================
+
+함수 구성 (언제든지 변경될수 있음):
+
+Utility functions
+- calculate_crc8()
+- send_packet()
+- clamp()
+- round()
+- normalize_yaw_deg()
+
+Packet encoding
+- append_u8()
+- append_i16()
+- append_u32()
+- append_i32()
+
+Command reception
+- reschedule_last_ack()
+- process_command_packet()
+- process_received_byte()
+- receive_commands()
+
+Telemetry / ACK transmission
+- send_telemetry()
+- send_ack_packet()
+- send_ack_if_due()
+
+Public functions
+- initialize()
+- receive()
+- schedule_ack()
+- send_telemetry_if_due()
+- update_tx()
+- get_command()

@@ -9,11 +9,11 @@ import serial
 
 
 # ============================================================
-# Configuration
+# User configuration
 # ============================================================
 
 PORT = "COM18"
-BAUD = 9600
+BAUD = 57600
 
 TELEMETRY_HEADER = 0xA5
 COMMAND_HEADER = 0x5A
@@ -21,15 +21,11 @@ COMMAND_HEADER = 0x5A
 TELEMETRY_LENGTH = 36
 COMMAND_LENGTH = 4
 
-# telemetry 완전 수신 후 CMD 묶음 송신까지 대기시간
-COMMAND_DELAY_AFTER_TELEMETRY_S = 0.005
+# 실행 중 "delay 20" 명령으로 변경 가능
+DEFAULT_COMMAND_DELAY_MS = 10.0
 
-# 동일 sequence + command 패킷 반복 송신
-COMMAND_REPEAT_COUNT = 3
-COMMAND_REPEAT_INTERVAL_S = 0.005
-
-# telemetry 내 embedded ACK 대기시간
-ACK_TIMEOUT_S = 2.0
+# CMD 송신 후 embedded ACK 대기시간
+ACK_TIMEOUT_S = 1.0
 
 ACK_RESULT_NONE = 0xFF
 
@@ -74,7 +70,7 @@ STATE_NAMES = {
 # ============================================================
 
 def calculate_crc8(data: bytes) -> int:
-    """CRC-8/ATM, polynomial 0x07, initial value 0x00."""
+    """CRC-8/ATM: polynomial 0x07, initial value 0x00."""
     crc = 0x00
 
     for byte in data:
@@ -95,19 +91,29 @@ def make_command_packet(sequence: int, command: int) -> bytes:
         sequence & 0xFF,
         command & 0xFF,
     ])
-
     return body + bytes([calculate_crc8(body)])
 
 
 def parse_telemetry(packet: bytes) -> dict:
     if len(packet) != TELEMETRY_LENGTH:
-        raise ValueError("Invalid telemetry length")
+        raise ValueError(
+            f"Invalid telemetry length: {len(packet)}"
+        )
 
     if packet[0] != TELEMETRY_HEADER:
-        raise ValueError("Invalid telemetry header")
+        raise ValueError(
+            f"Invalid telemetry header: 0x{packet[0]:02X}"
+        )
 
-    if calculate_crc8(packet[:-1]) != packet[-1]:
-        raise ValueError("Telemetry CRC error")
+    expected_crc = calculate_crc8(packet[:-1])
+    received_crc = packet[-1]
+
+    if expected_crc != received_crc:
+        raise ValueError(
+            "Telemetry CRC error: "
+            f"expected=0x{expected_crc:02X}, "
+            f"received=0x{received_crc:02X}"
+        )
 
     values = struct.unpack(
         "<BBBBBIiiihhhhhhBBB",
@@ -145,15 +151,16 @@ class CommandState:
     packet: bytes
 
     waiting_for_telemetry: bool = True
+    telemetry_received_time: float | None = None
     send_due_time: float | None = None
     sent_time: float | None = None
 
 
 # ============================================================
-# Test program
+# Ground station test
 # ============================================================
 
-class CometLoRaTest:
+class CometLoRaGroundTest:
     def __init__(self) -> None:
         self.serial = serial.Serial(
             port=PORT,
@@ -162,7 +169,7 @@ class CometLoRaTest:
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             timeout=0.02,
-            write_timeout=0.1,
+            write_timeout=0.2,
             xonxoff=False,
             rtscts=False,
             dsrdtr=False,
@@ -172,18 +179,32 @@ class CometLoRaTest:
         self.lock = threading.Lock()
         self.rx_buffer = bytearray()
 
-        # 첫 telemetry의 기존 ACK sequence 다음 값부터 시작한다.
+        self.command_delay_s = (
+            DEFAULT_COMMAND_DELAY_MS / 1000.0
+        )
+
         self.sequence_initialized = False
         self.next_sequence = 0
 
-        # 송신 슬롯 대기 또는 telemetry 내 ACK 대기 중인 CMD
         self.active_command: CommandState | None = None
-
-        # timeout 후 아직 ACK가 확인되지 않은 마지막 CMD
         self.last_timeout_command: CommandState | None = None
+
+        self.valid_telemetry_count = 0
+        self.telemetry_crc_error_count = 0
+        self.discarded_rx_byte_count = 0
+
+        self.last_telemetry_host_time: float | None = None
+
+    # --------------------------------------------------------
+    # Start / stop
+    # --------------------------------------------------------
 
     def start(self) -> None:
         print(f"[LINK] Connected: {PORT} @ {BAUD}")
+        print(
+            f"[CONFIG] CMD delay: "
+            f"{self.command_delay_s * 1000.0:.1f} ms"
+        )
         print("[LINK] Waiting for telemetry")
 
         threading.Thread(
@@ -205,25 +226,29 @@ class CometLoRaTest:
     def receive_loop(self) -> None:
         while self.running:
             try:
-                data = self.serial.read(
-                    self.serial.in_waiting or 1
-                )
+                # 데이터가 있으면 현재 OS 버퍼의 데이터를 한꺼번에 읽고,
+                # 없으면 1바이트를 최대 timeout 동안 기다린다.
+                read_size = self.serial.in_waiting or 1
+                received = self.serial.read(read_size)
+
             except serial.SerialException as exc:
                 print(f"\n[ERROR] Serial receive failed: {exc}")
                 self.running = False
                 return
 
-            if not data:
+            if not received:
                 continue
 
             with self.lock:
-                self.rx_buffer.extend(data)
+                self.rx_buffer.extend(received)
                 self.process_rx_buffer()
 
     def process_rx_buffer(self) -> None:
         while self.rx_buffer:
+            # telemetry header까지 재동기화
             if self.rx_buffer[0] != TELEMETRY_HEADER:
                 del self.rx_buffer[0]
+                self.discarded_rx_byte_count += 1
                 continue
 
             if len(self.rx_buffer) < TELEMETRY_LENGTH:
@@ -235,18 +260,29 @@ class CometLoRaTest:
 
             try:
                 telemetry = parse_telemetry(packet)
-            except ValueError as exc:
-                print(f"\n[RX] {exc}")
 
-                # 재동기화를 위해 헤더 1바이트만 폐기한다.
+            except ValueError as exc:
+                self.telemetry_crc_error_count += 1
+                print(f"\n[RX ERROR] {exc}")
+
+                # 다음 0xA5를 찾을 수 있도록 헤더 1바이트만 폐기
                 del self.rx_buffer[0]
                 continue
 
             del self.rx_buffer[:TELEMETRY_LENGTH]
+            self.valid_telemetry_count += 1
             self.handle_telemetry(telemetry)
 
     def handle_telemetry(self, telemetry: dict) -> None:
         now = time.monotonic()
+
+        period_ms: float | None = None
+        if self.last_telemetry_host_time is not None:
+            period_ms = (
+                now - self.last_telemetry_host_time
+            ) * 1000.0
+
+        self.last_telemetry_host_time = now
 
         if not self.sequence_initialized:
             if telemetry["ack_result"] == ACK_RESULT_NONE:
@@ -263,42 +299,57 @@ class CometLoRaTest:
                 f"{self.next_sequence}"
             )
 
-        state = STATE_NAMES.get(
+        state_name = STATE_NAMES.get(
             telemetry["state"],
             f"UNKNOWN({telemetry['state']})",
         )
 
-        ack_result_name = ACK_RESULT_NAMES.get(
+        ack_name = ACK_RESULT_NAMES.get(
             telemetry["ack_result"],
             f"UNKNOWN({telemetry['ack_result']})",
+        )
+
+        period_text = (
+            "   N/A"
+            if period_ms is None
+            else f"{period_ms:6.1f}"
         )
 
         print(
             f"\r[TEL] "
             f"seq={telemetry['sequence']:3d} "
-            f"state={state:<7} "
-            f"time={telemetry['time_ms']:8d}ms "
+            f"period={period_text}ms "
+            f"state={state_name:<7} "
+            f"time={telemetry['time_ms']:10d}ms "
             f"alt={telemetry['altitude']:8.2f}m "
             f"VD={telemetry['velocity_d']:7.1f}m/s "
             f"status=0x{telemetry['status_flags']:02X} "
             f"fault=0x{telemetry['fault_flags']:02X} "
-            f"ack={telemetry['ack_sequence']:3d}/{ack_result_name}",
+            f"ack={telemetry['ack_sequence']:3d}/{ack_name}",
             end="",
             flush=True,
         )
 
         self.handle_embedded_ack(telemetry, now)
 
-        # CMD는 다음 telemetry를 완전히 받은 뒤 지정된 지연 후 송신한다.
         command = self.active_command
 
+        # CLI에서 명령을 요청한 뒤 도착한 첫 번째 정상 telemetry를
+        # 송신 슬롯 기준으로 사용한다.
         if (
             command is not None
             and command.waiting_for_telemetry
         ):
             command.waiting_for_telemetry = False
+            command.telemetry_received_time = now
             command.send_due_time = (
-                now + COMMAND_DELAY_AFTER_TELEMETRY_S
+                now + self.command_delay_s
+            )
+
+            print(
+                f"\n[SLOT] Complete telemetry received; "
+                f"CMD scheduled after "
+                f"{self.command_delay_s * 1000.0:.1f} ms"
             )
 
     def handle_embedded_ack(
@@ -306,67 +357,39 @@ class CometLoRaTest:
         telemetry: dict,
         now: float,
     ) -> None:
+        command = self.active_command
+
+        if command is None or command.sent_time is None:
+            return
+
         ack_sequence = telemetry["ack_sequence"]
         ack_result = telemetry["ack_result"]
 
         if ack_result == ACK_RESULT_NONE:
             return
 
-        # 정상 ACK
-        command = self.active_command
-
-        if (
-            command is not None
-            and command.sent_time is not None
-            and ack_sequence == command.sequence
-        ):
-            result_name = ACK_RESULT_NAMES.get(
-                ack_result,
-                f"UNKNOWN({ack_result})",
-            )
-
-            latency_ms = (
-                now - command.sent_time
-            ) * 1000.0
-
-            print(
-                f"\n[ACK] "
-                f"seq={ack_sequence} "
-                f"command={COMMAND_NAMES[command.command]} "
-                f"result={result_name} "
-                f"latency={latency_ms:.1f}ms"
-            )
-
-            self.active_command = None
-            self.last_timeout_command = None
+        if ack_sequence != command.sequence:
             return
 
-        # timeout 이후 늦게 확인된 ACK
-        timed_out = self.last_timeout_command
+        result_name = ACK_RESULT_NAMES.get(
+            ack_result,
+            f"UNKNOWN({ack_result})",
+        )
 
-        if (
-            timed_out is not None
-            and timed_out.sent_time is not None
-            and ack_sequence == timed_out.sequence
-        ):
-            result_name = ACK_RESULT_NAMES.get(
-                ack_result,
-                f"UNKNOWN({ack_result})",
-            )
+        latency_ms = (
+            now - command.sent_time
+        ) * 1000.0
 
-            latency_ms = (
-                now - timed_out.sent_time
-            ) * 1000.0
+        print(
+            f"\n[ACK] "
+            f"seq={ack_sequence} "
+            f"command={COMMAND_NAMES[command.command]} "
+            f"result={result_name} "
+            f"latency={latency_ms:.1f} ms"
+        )
 
-            print(
-                f"\n[LATE ACK] "
-                f"seq={ack_sequence} "
-                f"command={COMMAND_NAMES[timed_out.command]} "
-                f"result={result_name} "
-                f"latency={latency_ms:.1f}ms"
-            )
-
-            self.last_timeout_command = None
+        self.active_command = None
+        self.last_timeout_command = None
 
     # --------------------------------------------------------
     # Command
@@ -376,7 +399,8 @@ class CometLoRaTest:
         with self.lock:
             if not self.sequence_initialized:
                 print(
-                    "\n[CMD] Rejected: wait for the first telemetry"
+                    "\n[CMD] Rejected: "
+                    "wait for first valid telemetry"
                 )
                 return
 
@@ -386,10 +410,9 @@ class CometLoRaTest:
                 )
                 return
 
-            # timeout된 명령의 결과가 아직 불명확하면 새 sequence를 막는다.
             if self.last_timeout_command is not None:
                 print(
-                    "\n[CMD] Rejected: previous CMD is unresolved"
+                    "\n[CMD] Rejected: previous CMD unresolved"
                 )
                 print(
                     "[CMD] Use 'resend' or 'clear_timeout'"
@@ -433,7 +456,6 @@ class CometLoRaTest:
 
             previous = self.last_timeout_command
 
-            # 같은 sequence와 command를 그대로 사용한다.
             self.active_command = CommandState(
                 sequence=previous.sequence,
                 command=previous.command,
@@ -441,9 +463,12 @@ class CometLoRaTest:
             )
 
             print(
-                f"\n[CMD] Manual resend queued "
+                f"\n[CMD] Resend queued "
                 f"seq={previous.sequence} "
                 f"command={COMMAND_NAMES[previous.command]}"
+            )
+            print(
+                "[CMD] Waiting for next complete telemetry"
             )
 
     def clear_timeout(self) -> None:
@@ -458,19 +483,21 @@ class CometLoRaTest:
                 print("\n[CMD] No unresolved timed-out CMD")
                 return
 
-            sequence = self.last_timeout_command.sequence
-            command = self.last_timeout_command.command
-
+            previous = self.last_timeout_command
             self.last_timeout_command = None
 
             print(
                 f"\n[CMD] Timed-out CMD cleared "
-                f"seq={sequence} "
-                f"command={COMMAND_NAMES[command]}"
+                f"seq={previous.sequence} "
+                f"command={COMMAND_NAMES[previous.command]}"
             )
             print(
-                "[WARN] A delayed execution or ACK may still arrive"
+                "[WARN] Delayed execution or ACK may still arrive"
             )
+
+    # --------------------------------------------------------
+    # Scheduler
+    # --------------------------------------------------------
 
     def scheduler_loop(self) -> None:
         while self.running:
@@ -492,28 +519,14 @@ class CometLoRaTest:
         if command.sent_time is not None:
             return
 
-        if time.monotonic() < command.send_due_time:
+        now = time.monotonic()
+
+        if now < command.send_due_time:
             return
 
-        # timeout과 latency는 첫 번째 패킷 송신 시점부터 계산한다.
-        command.sent_time = time.monotonic()
-
         try:
-            for repeat_index in range(COMMAND_REPEAT_COUNT):
-                written = self.serial.write(command.packet)
-
-                if written != COMMAND_LENGTH:
-                    raise serial.SerialException(
-                        f"Partial CMD write: "
-                        f"{written}/{COMMAND_LENGTH}"
-                    )
-
-                self.serial.flush()
-
-                if repeat_index < COMMAND_REPEAT_COUNT - 1:
-                    time.sleep(
-                        COMMAND_REPEAT_INTERVAL_S
-                    )
+            written = self.serial.write(command.packet)
+            self.serial.flush()
 
         except (
             serial.SerialException,
@@ -522,6 +535,30 @@ class CometLoRaTest:
             print(f"\n[ERROR] CMD send failed: {exc}")
             self.active_command = None
             return
+
+        if written != COMMAND_LENGTH:
+            print(
+                f"\n[ERROR] Partial CMD write: "
+                f"{written}/{COMMAND_LENGTH}"
+            )
+            self.active_command = None
+            return
+
+        command.sent_time = time.monotonic()
+
+        actual_delay_ms: float | None = None
+
+        if command.telemetry_received_time is not None:
+            actual_delay_ms = (
+                command.sent_time
+                - command.telemetry_received_time
+            ) * 1000.0
+
+        actual_delay_text = (
+            "N/A"
+            if actual_delay_ms is None
+            else f"{actual_delay_ms:.2f}"
+        )
 
         raw = " ".join(
             f"{byte:02X}"
@@ -532,8 +569,9 @@ class CometLoRaTest:
             f"\n[CMD] Sent "
             f"seq={command.sequence} "
             f"command={COMMAND_NAMES[command.command]} "
-            f"repeat={COMMAND_REPEAT_COUNT} "
-            f"interval={COMMAND_REPEAT_INTERVAL_S * 1000:.1f}ms "
+            f"configured_delay="
+            f"{self.command_delay_s * 1000.0:.1f}ms "
+            f"actual_delay={actual_delay_text}ms "
             f"raw={raw}"
         )
 
@@ -553,10 +591,70 @@ class CometLoRaTest:
             f"seq={command.sequence} "
             f"command={COMMAND_NAMES[command.command]}"
         )
-        print("[TIMEOUT] Enter 'resend' to retry manually")
 
         self.last_timeout_command = command
         self.active_command = None
+
+    # --------------------------------------------------------
+    # CLI configuration / diagnostics
+    # --------------------------------------------------------
+
+    def set_delay(self, user_input: str) -> None:
+        parts = user_input.split()
+
+        if len(parts) != 2:
+            print("\n[CLI] Usage: delay <milliseconds>")
+            return
+
+        try:
+            delay_ms = float(parts[1])
+        except ValueError:
+            print("\n[CLI] Invalid delay")
+            return
+
+        if delay_ms < 0.0 or delay_ms > 60.0:
+            print("\n[CLI] Delay range: 0 to 60 ms")
+            return
+
+        with self.lock:
+            if self.active_command is not None:
+                print(
+                    "\n[CLI] Cannot change delay "
+                    "while CMD is active"
+                )
+                return
+
+            self.command_delay_s = delay_ms / 1000.0
+
+        print(
+            f"\n[CONFIG] CMD delay set to "
+            f"{delay_ms:.1f} ms"
+        )
+
+    def show_stats(self) -> None:
+        with self.lock:
+            active_text = (
+                "none"
+                if self.active_command is None
+                else (
+                    f"seq={self.active_command.sequence}, "
+                    f"command="
+                    f"{COMMAND_NAMES[self.active_command.command]}"
+                )
+            )
+
+            print(
+                "\n[STATS]"
+                f"\n  valid telemetry : "
+                f"{self.valid_telemetry_count}"
+                f"\n  telemetry errors: "
+                f"{self.telemetry_crc_error_count}"
+                f"\n  discarded bytes : "
+                f"{self.discarded_rx_byte_count}"
+                f"\n  CMD delay       : "
+                f"{self.command_delay_s * 1000.0:.1f} ms"
+                f"\n  active command  : {active_text}"
+            )
 
     # --------------------------------------------------------
     # CLI
@@ -575,6 +673,8 @@ class CometLoRaTest:
             "\n  force_deploy"
             "\n  force_descent"
             "\n  force_landed"
+            "\n  delay <ms>"
+            "\n  stats"
             "\n  resend"
             "\n  clear_timeout"
             "\n  quit"
@@ -582,12 +682,20 @@ class CometLoRaTest:
 
         try:
             while self.running:
-                user_input = input("\ncomet> ").strip().lower()
+                user_input = input(
+                    "\ncomet> "
+                ).strip().lower()
 
                 if user_input in COMMANDS:
                     self.request_command(
                         COMMANDS[user_input]
                     )
+
+                elif user_input.startswith("delay"):
+                    self.set_delay(user_input)
+
+                elif user_input == "stats":
+                    self.show_stats()
 
                 elif user_input == "resend":
                     self.resend()
@@ -599,20 +707,25 @@ class CometLoRaTest:
                     break
 
                 elif user_input:
-                    print("[CLI] Unknown command")
+                    print("\n[CLI] Unknown command")
 
         except KeyboardInterrupt:
             print("\n[CLI] Interrupted")
 
         finally:
             self.running = False
-            self.serial.close()
+
+            try:
+                self.serial.close()
+            except serial.SerialException:
+                pass
+
             print("[LINK] Closed")
 
 
 def main() -> None:
     try:
-        test = CometLoRaTest()
+        test = CometLoRaGroundTest()
         test.start()
 
     except serial.SerialException as exc:
