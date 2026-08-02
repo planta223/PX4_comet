@@ -1,4 +1,0 @@
-LOGS/            원본 .BIN 보관, 수정 금지
-scripts/         변환/후처리 코드
-output/          메시지별 CSV 추출 결과
-trajectory_input/ 궤적 프로그램용 정리 CSV
