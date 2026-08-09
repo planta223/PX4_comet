@@ -1,5 +1,5 @@
-# Full SD card backup - do not track raw backup directory
-SD_backup_20260625/
+# log and SD backup
+data/
 
 # Local Python environments
 .venv/

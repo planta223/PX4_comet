@@ -13,14 +13,13 @@ local sensor = require("comet_sensor")
 local servo = require("comet_servo")
 local lora = require("comet_lora")
 local flight = require("comet_flight_state")
-
+local sik_debug = require("comet_sik_debug")
 
 -- ---------------------------------------------------------------------
 -- Internal state
 -- ---------------------------------------------------------------------
 
 local initialized = false
-
 
 -- ---------------------------------------------------------------------
 -- Initialization
@@ -33,6 +32,7 @@ local function startup()
     local servo_ok = servo.initialize()
     local lora_ok = lora.initialize()
     local flight_ok = flight.initialize(now)
+    local sik_debug_ok = sik_debug.initialize()
 
     -- flight.initialize()가 fault를 초기화한 뒤 LoRa 상태를 반영한다.
     flight.set_lora_available(lora_ok)
@@ -51,6 +51,10 @@ local function startup()
 
     if not flight_ok then
         gcs:send_text(3, "COMET: [MAIN] Flight initialization failed")
+    end
+
+    if not sik_debug_ok then
+        gcs:send_text(4, "COMET: SiK debug initialization failed")
     end
 
     -- 센서, 서보 및 상태머신 초기화 실패는 치명적 오류로 처리한다.
@@ -86,10 +90,12 @@ local function update()
     end
 
     -- 1. ArduPilot AHRS/EKF 상태 갱신
-    sensor.update()
+    sensor.update(now)
 
     local sensor_data = sensor.get_data()
     local status_flags = sensor.get_status_flags()
+
+    sensor.send_debug_if_due(now) -- 디버그용 상태 메시지 전송
 
     -- 2. LoRa 명령 수신
     lora.receive()
@@ -99,7 +105,18 @@ local function update()
     -- 이후 telemetry 패킷에 포함된다.
     flight.update(now, sensor_data)
 
-    -- 4. 텔레메트리 및 ACK 송신 스케줄 처리
+    -- 4. SiK MAVLink 실시간 디버그 전송
+    sik_debug.update(
+        now,
+        sensor_data,
+        flight.get_state(),
+        status_flags,
+        flight.get_fault_flags(),
+        flight.get_maximum_altitude(),
+        flight.is_parachute_deployed()
+    )
+
+    -- 5. 갱신된 비행 상태와 센서 정보를 LoRa로 송신
     lora.update_tx(
         now,
         sensor_data,

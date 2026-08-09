@@ -152,6 +152,8 @@ _flight_log_active = False
 # None이면 아직 한 번도 안 받은 것 (SiK 죽음/미연결과 구분).
 _sik_live_accel = {"accel_e": None, "accel_n": None, "accel_z": None}
 _sik_live_vel = {"vel_e": None, "vel_n": None, "vel_z": None}
+_sik_position_valid = False
+_sik_altitude_valid = False
 
 # SiK STATUSTEXT / LoRa 텔레메트리가 각자 보고하는 로켓 상태 - 퓨전 모듈이
 # 이 둘을 보고 최종 _current_rocket_state를 판단한다 (fusion.py 참고).
@@ -165,14 +167,16 @@ _lora_rocket_state = None
 _lora_fault_flags = 0
 _last_fault_flags_for_snapshot = 0
 
-# LoRa가 마지막으로 보낸 위치 샘플 (퓨전의 "위치는 항상 LoRa 우선" 입력,
-# 그리고 SiK 죽었을 때 폴백 칼만필터의 관측 입력으로도 쓰인다).
+# LoRa가 마지막으로 보낸 수평 위치/고도 샘플. 두 필드의 유효성은 독립이며,
+# SiK가 죽었을 때 폴백 칼만필터의 관측 입력으로도 쓰인다.
 _last_lora_pos_sample = None
+_last_altitude_source_for_log = None
 
 # fusion.DataFusion 판단 결과 - main()의 _update_fusion()이 매 프레임 갱신한다.
 _fusion = fusion.DataFusion()
 _fused = {
     "position": (0.0, 0.0, 0.0), "position_source": None,
+    "altitude_source": None,
     "attitude": (0.0, 0.0, 0.0), "attitude_source": None,
     "accel": None, "accel_source": None,
     "velocity": (0.0, 0.0, 0.0), "velocity_source": None,
@@ -257,6 +261,7 @@ def _launch_pipeline_threads():
 def _poll_sik():
     global _last_sik_seen, _last_rc8, _last_rc9, _last_gps, _sik_rocket_state, _prearm_reasons
     global _last_attitude_seen, _last_raw_imu_seen
+    global _sik_position_valid, _sik_altitude_valid
 
     for item in _drain_queue(trajectory_queue):
         # sik.py는 이제 로켓 상태를 모르고 무조건 흘려보내기만 하므로, "이걸
@@ -308,6 +313,10 @@ def _poll_sik():
             _live_pos["pos_e"] = item["live_pos_e"]
             _live_pos["pos_n"] = item["live_pos_n"]
             _live_pos["alt"] = item["live_alt"]
+        if "sik_position_valid" in item:
+            _sik_position_valid = item["sik_position_valid"]
+        if "sik_altitude_valid" in item:
+            _sik_altitude_valid = item["sik_altitude_valid"]
 
 
 def _poll_lora():
@@ -320,15 +329,21 @@ def _poll_lora():
         # "트레일" 표시만 아래에서 걸러진다.
         _last_lora_pos_sample = {
             "pos_e": item["pos_e"], "pos_n": item["pos_n"],
-            "alt": item["alt"], "timestamp": item["timestamp"],
+            "position_valid": item["position_valid"],
+            "alt": item["alt"], "altitude_valid": item["altitude_valid"],
+            "timestamp": item["timestamp"],
         }
 
         if not _fused["recording_enabled"]:
             continue
 
+        if not item["position_valid"]:
+            continue
         _lora_traj_e.append(item["pos_e"])
         _lora_traj_n.append(item["pos_n"])
-        _lora_traj_alt.append(item["alt"])
+        # 수평 위치가 유효하지만 해당 frame의 고도만 invalid이면 마지막 fused
+        # 고도를 사용해 3D 궤적에 NaN/None이 들어가지 않게 한다.
+        _lora_traj_alt.append(item["alt"] if item["altitude_valid"] else _fused["position"][2])
         del _lora_traj_e[:-_MAX_POINTS]
         del _lora_traj_n[:-_MAX_POINTS]
         del _lora_traj_alt[:-_MAX_POINTS]
@@ -352,7 +367,7 @@ def _poll_lora():
                 target_tag = "force_transition_status_text"
             else:
                 target_tag = "servo_group_status_text"
-            if result["success"]:
+            if result["result"] is not None:
                 dpg.set_value(
                     target_tag,
                     f"{result['command_name']} -> {result['result']} ({result['attempts']}회 시도)",
@@ -403,7 +418,12 @@ def _update_fusion_compare_stats(now, sik_alive, lora_alive, sik_pos):
         _ensure_fusion_compare_csv(output_dir)
         _fusion_compare_dir_generation = generation
 
-    if sik_alive and lora_alive and _last_lora_pos_sample is not None:
+    if (
+        sik_alive and lora_alive and _sik_position_valid and _sik_altitude_valid
+        and _last_lora_pos_sample is not None
+        and _last_lora_pos_sample["position_valid"]
+        and _last_lora_pos_sample["altitude_valid"]
+    ):
         diff = (
             sik_pos[0] - _last_lora_pos_sample["pos_e"],
             sik_pos[1] - _last_lora_pos_sample["pos_n"],
@@ -432,12 +452,17 @@ def _update_fusion():
     """
     global _current_rocket_state, _fused, _last_rocket_state_for_log, _flight_log_active
     global _ascent_entered_at, _flight_max_altitude_m, _flight_duration_sec
+    global _last_altitude_source_for_log
 
     now = time.time()
     sik_alive = fusion.is_link_alive(_last_sik_seen, config.SIK_LINK_TIMEOUT_SEC, now)
     lora_alive = fusion.is_link_alive(_last_lora_seen, config.LORA_LINK_TIMEOUT_SEC, now)
 
-    sik_pos = (_live_pos["pos_e"], _live_pos["pos_n"], _live_pos["alt"])
+    sik_pos = (
+        _live_pos["pos_e"] if _sik_position_valid else math.nan,
+        _live_pos["pos_n"] if _sik_position_valid else math.nan,
+        _live_pos["alt"] if _sik_altitude_valid else math.nan,
+    )
     sik_attitude_rad = (_attitude["roll"], _attitude["pitch"], _attitude["yaw"])
     sik_accel = None
     if _sik_live_accel["accel_e"] is not None:
@@ -452,6 +477,14 @@ def _update_fusion():
         _last_lora_pos_sample, _lora_rocket_state,
     )
     _current_rocket_state = _fused["rocket_state"]
+    if _fused["altitude_source"] != _last_altitude_source_for_log:
+        event_logger.log(
+            "altitude_source_transition",
+            from_source=_last_altitude_source_for_log,
+            to_source=_fused["altitude_source"],
+            altitude_m=_fused["position"][2],
+        )
+        _last_altitude_source_for_log = _fused["altitude_source"]
     if _last_rocket_state_for_log is not None and _current_rocket_state != _last_rocket_state_for_log:
         event_logger.log("rocket_state_transition", from_state=_last_rocket_state_for_log, to_state=_current_rocket_state)
         # FC Reboot를 안 거치고(예: 리부트 없이 지상 테스트하다 바로 ASCENT로
@@ -688,45 +721,14 @@ def _make_servo_send_callback(channel: int):
 
 def _make_all_servo_preset_callback(pwm_key: str, lora_command_name: str):
     """
-    "사출(전체)"/"잠금(전체)" 버튼용 - comet_main.lua의 servo.lock_all()/
-    release_all()과 같은 개념을 SiK/LoRa 어느 경로로 보내든 동일한 명령
-    코드(config.LORA_COMMAND, 예: RELEASE_ALL=6/LOCK_ALL=5)로 전송한다.
-
-    예전에는 SiK 연결 시 MAV_CMD_DO_SET_SERVO로 각 채널에 직접 PWM을
-    씀 - 이건 ArduPilot 펌웨어가 comet_*.lua 상태머신을 거치지 않고 즉시
-    처리하는 명령이라, READY 상태에서 실수로 눌러도 검증 없이 서보가
-    움직이고 comet_command_queue/ACK/로그 어디에도 남지 않는 문제가 있었다
-    (SiK만 상태머신을 우회하는 구조). 이제는 SiK도 comet_mavlink.lua가
-    파싱하는 COMET_CMD(NAMED_VALUE_INT)로 같은 명령 코드를 보내
-    LoRa와 완전히 동일한 큐/상태검증/ACK 경로를 거친다.
-
-    SiK 연결이 없으면 LoRa로 동일 명령을 폴백 전송한다. SiK 연결 판정은
-    기존 _make_servo_send_callback/_on_reboot_fc와 동일하게
-    sik.get_connection()이 있는지로 본다.
+    "사출(전체)"/"잠금(전체)" 버튼용. 최신 comet_main.lua가 실제로
+    receive()하는 유일한 원격 command transport는 comet_lora.lua이므로,
+    SiK 연결 여부와 무관하게 LoRa command queue로 보낸다.
     """
-    command_code = config.LORA_COMMAND[lora_command_name]
-
     def _callback():
-        conn = sik.get_connection()
-        if conn is not None:
-            sequence = mission_features.send_mavlink_command(conn, command_code)
-
-            # 실제 상태 반영은 comet_mavlink.lua의 ACK(sik.py가 수신)로
-            # 확인해야 하지만, 버튼을 누른 즉시 의도한 프리셋 PWM을
-            # 슬라이더에 표시해 조작 피드백을 준다 (전송 여부와 무관한
-            # 표시 전용 - 실제 서보 반영 확인은 ACK/텔레메트리로 판단할 것).
-            for servo in config.SERVO_CHANNELS:
-                ch = servo["channel"]
-                pwm = servo.get(pwm_key, 1500)
-                dpg.set_value(f"servo_slider_{ch}", pwm)
-                dpg.set_value(f"servo_status_{ch}", f"CH{ch} -> {lora_command_name} 전송됨 (SiK seq={sequence})")
-
-            event_logger.log("servo_command", channel="all", lora_command=lora_command_name, path="sik", sequence=sequence)
-            dpg.set_value("servo_group_status_text", f"SiK 경유 {lora_command_name} 전송 (seq={sequence})")
-        else:
-            mission_features.send_lora_command(lora_command_queue, lora_command_name)
-            event_logger.log("servo_command", channel="all", lora_command=lora_command_name, path="lora")
-            dpg.set_value("servo_group_status_text", f"SiK 없음 - LoRa {lora_command_name} 전송 중...")
+        mission_features.send_lora_command(lora_command_queue, lora_command_name)
+        event_logger.log("servo_command", channel="all", lora_command=lora_command_name, path="lora")
+        dpg.set_value("servo_group_status_text", f"LoRa {lora_command_name} 전송 중...")
     return _callback
 
 
@@ -873,7 +875,12 @@ def _on_reboot_fc():
 
 def _on_state_reset():
     global _flight_log_active
-    mission_features.send_state_reset(lora_command_queue)
+    try:
+        mission_features.send_state_reset(lora_command_queue)
+    except ValueError as exc:
+        dpg.set_value("reset_status_text", str(exc))
+        event_logger.log("state_reset_requested", success=False, reason=str(exc))
+        return
     dpg.set_value("reset_status_text", "전송 중... (LoRa)")
 
     # 상태를 READY로 되돌리는 것 = 다음 비행 준비 시작이니 _flight_log_active도
@@ -954,7 +961,8 @@ def _build_gui():
                 # ASCENT 진입 이후 실시간으로 올라가다가 LANDED 시점에
                 # _flight_duration_sec으로 고정된다 (착륙창의 요약과 같은 값).
                 dpg.add_text("비행시간(T+): --", tag="flight_timer_text")
-                dpg.add_text("위치(E/N/Alt): --", tag="fc_pos_text")
+                dpg.add_text("위치(E/N): --", tag="fc_pos_text")
+                dpg.add_text("고도: --", tag="fc_alt_text")
                 dpg.add_text("속도(E/N/Z): --", tag="fc_vel_text")
                 dpg.add_text("가속도(X/Y/Z, body frame): --", tag="fc_accel_text")
                 dpg.add_text("자세(R/P/Y): --", tag="fused_attitude_text")
@@ -980,7 +988,7 @@ def _build_gui():
 
                 dpg.add_text("제어 파트")
                 dpg.add_separator()
-                dpg.add_text("서보 일괄 제어 - SiK 우선, 연결 없으면 LoRa로 폴백")
+                dpg.add_text("서보 일괄 제어 - 최신 FC Lua command 경로(LoRa)")
                 with dpg.group(horizontal=True):
                     deploy_btn = dpg.add_button(
                         label="사출 (전체)", width=140, height=44,
@@ -1093,8 +1101,14 @@ def _update_gui():
 
     dpg.set_value(
         "fc_pos_text",
-        f"위치(E/N/Alt) [{src(_fused['position_source'])}]: {pos_e:.2f} / {pos_n:.2f} / {pos_alt:.2f} m",
+        f"위치(E/N) [{src(_fused['position_source'])}]: {pos_e:.2f} / {pos_n:.2f} m",
     )
+    altitude_source_labels = {
+        "lora_baro": "LoRa/startup baro",
+        "sik_fallback": "SiK fallback/baro",
+    }
+    altitude_label = altitude_source_labels.get(_fused["altitude_source"], "--")
+    dpg.set_value("fc_alt_text", f"고도: {pos_alt:.2f} m [{altitude_label}]")
     dpg.set_value(
         "fc_vel_text",
         f"속도(E/N/Z) [{src(_fused['velocity_source'])}]: {vel_e:.2f} / {vel_n:.2f} / {vel_z:.2f} m/s",

@@ -42,14 +42,8 @@ REBOOT_VERIFY_TIMEOUT_SEC = 15.0
 # 일시적 지터를 오탐하지 않게 한다.
 SIK_RAW_IMU_WATCHDOG_SEC = 3.0
 
-# COMET_ACK(NAMED_VALUE_FLOAT) 수신 주기 - 서보 잠금/사출 등 원격 명령의
-# 실행 결과 ACK를 comet_mavlink.lua로부터 받기 위한 것. 명령 자체가
-# 이벤트성이라 높은 주기가 필요 없다.
-#
-# comet_mavlink.lua는 ACK를 NAMED_VALUE_INT가 아니라 NAMED_VALUE_FLOAT으로
-# 보낸다 - ArduPilot 내장 gcs:send_named_float()를 그대로 쓰기 위함(모듈
-# 의존 없음, SCR_HEAP_SIZE 부족 문제 회피). COMET_CMD(GCS->FC)는 여전히
-# NAMED_VALUE_INT.
+# 구형 comet_mavlink.lua 호환 상수. 최신 comet_main.lua는 해당 모듈을
+# require하지 않으므로 main.py의 실제 제어 경로에서는 사용하지 않는다.
 MAVLINK_COMET_ACK_RATE_HZ = 5
 
 # 필요한 필드만 선별 수신하기 위한 메시지 요청 주기 (Hz)
@@ -89,11 +83,7 @@ SIK_REQUESTED_MESSAGES = [
     ("SYS_STATUS", SIK_SYS_STATUS_RATE_HZ),
     ("ATTITUDE", SIK_ATTITUDE_RATE_HZ),
     ("SCALED_PRESSURE", SIK_BARO_RATE_HZ),
-    # NAMED_VALUE_FLOAT(COMET_ACK)은 여기 넣지 않는다 - comet_mavlink.lua가
-    # gcs:send_named_float()로 그때그때 쏘는 이벤트성 메시지라 FC의 주기적
-    # 스트림 슬롯(ap_message)에 대응하는 게 없다. SET_MESSAGE_INTERVAL로
-    # 요청해봐야 "No ap_message for mavlink id (251)"만 뜨고 무시되며,
-    # 요청 없이도 sik.py는 NAMED_VALUE_FLOAT을 그냥 수신해서 처리한다.
+    # NAMED_VALUE_FLOAT은 주기적 stream slot이 없어 요청 목록에 넣지 않는다.
 ]
 
 # heartbeat 미수신시 링크 dead 판정 (초)
@@ -205,49 +195,61 @@ ROCKET_STATE_KEYWORDS = {
 }
 
 # ---------------------------------------------------------------------------
-# LoRa 패킷 스펙 - comet_main.lua(FC측 실제 구현)와 반드시 일치해야 한다.
-# CRC는 poly=0x07, init=0x00 (반사/최종XOR 없음, 표준 "CRC-8") - "ATM"이 아님.
+# LoRa 패킷 스펙 - UP_TO_DATE/modules/comet_lora.lua의 실제 append 순서와
+# 반드시 일치해야 한다. 모든 다중 바이트 정수는 little-endian이다.
+# CRC는 poly=0x07, init=0x00, refin/refout=false, xorout=0x00이다.
 # ---------------------------------------------------------------------------
 LORA_TELEMETRY_HEADER = 0xA5
 LORA_COMMAND_HEADER = 0x5A
-LORA_ACK_HEADER = 0xA6
 
-LORA_TELEMETRY_LENGTH = 17
-# comet_lora.lua의 send_telemetry()와 정확히 일치하는 바이트 레이아웃
-# (little-endian, struct 포맷 "<4BI2hiB"):
-#   header(1) + seq(1) + flight_state(1) + fault_flags(1)
-#   + time_ms(4, uint32, millis())
-#   + north, east(2x2, int16, HOME 기준 오프셋(m) x 100 -> cm 정밀도,
-#     범위 ±327.67m - append_i16()이 clamp하므로 그 이상은 saturate됨.
-#     절대 위경도가 아니라 HOME 기준 상대좌표라 GCS에서 origin 변환 없이
-#     그대로 pos_n/pos_e(m)로 쓴다, lora.py 참고)
-#   + altitude(4, int32, 실제값(m, HOME 기준 상대고도) x 100)
-#   + crc8(1)
-# GCS는 LoRa로는 위치값만 받는다 - 속도/자세는 SiK/mavlink(ATTITUDE 등)로만
-# 받으며 폴백이 없다 (fusion.py 모듈 docstring 참고).
-# fault_flags는 comet_flight_state.lua의 M.FAULT 비트필드 그대로 - 자세한
-# 비트 의미는 아래 LORA_FAULT_FLAG_NAMES 참고.
+LORA_TELEMETRY_LENGTH = 36
+# byte offset / type / scale (comet_lora.lua send_telemetry):
+#   00 B   header             0xA5
+#   01 B   telemetry_sequence uint8
+#   02 B   flight_state       uint8
+#   03 B   status_flags       uint8 (LORA_STATUS_FLAG_NAMES)
+#   04 B   fault_flags        uint8 (LORA_FAULT_FLAG_NAMES)
+#   05 I   time_ms            uint32, FC millis()
+#   09 i   latitude           int32, deg * 1e7
+#   13 i   longitude          int32, deg * 1e7
+#   17 i   altitude           int32, startup pressure-reference m * 100
+#   21 h   velocity_n         int16, north-positive m/s * 10
+#   23 h   velocity_e         int16, east-positive m/s * 10
+#   25 h   velocity_d         int16, down-positive m/s * 10
+#   27 h   roll               int16, deg * 100
+#   29 h   pitch              int16, deg * 100
+#   31 h   yaw                int16, deg * 100, [-180, +180]
+#   33 B   ack_sequence       uint8, 마지막 처리 명령 sequence
+#   34 B   ack_result         uint8, 결과가 없으면 0xFF
+#   35 B   crc8               앞의 35바이트에 대한 CRC
 LORA_COMMAND_LENGTH = 4      # header + sequence + command + crc8
-LORA_ACK_LENGTH = 4          # header + sequence + result + crc8
 
 LORA_CRC_POLYNOMIAL = 0x07   # CRC-8, init=0x00 (calculate_crc8()에 하드코딩되어 있음)
+LORA_LAT_LON_SCALE = 10_000_000.0
+LORA_ALTITUDE_SCALE = 100.0
+LORA_VELOCITY_SCALE = 10.0
+LORA_ATTITUDE_SCALE = 100.0
+
+# int32 clamp 값은 실제 고도가 아니라 Lua append_i32() saturation 결과다.
+LORA_ALTITUDE_SATURATION_M = 2_147_483_647 / LORA_ALTITUDE_SCALE
+# 정상 범위를 강제로 자르지는 않고 운영 경고만 남기는 기준.
+LORA_ALTITUDE_WARNING_ABS_M = 100_000.0
 
 # comet_lora.lua의 lora.COMMAND 테이블과 반드시 값이 일치해야 한다.
 # FORCE_*는 description_flight_state_machine.txt에 문서화된 "원격 강제전이"
 # 명령 - 각각 정상 전이 그래프의 바로 이전 상태에서만 FC가 허용한다
 # (is_command_allowed() 참고). GCS 버튼은 main.py의 FORCE_TRANSITIONS 참고.
 LORA_COMMAND = {
-    "SERVO1_LOCK": 1,
-    "SERVO1_RELEASE": 2,
-    "SERVO2_LOCK": 3,
-    "SERVO2_RELEASE": 4,
+    "SERVO_MAIN_LOCK": 1,
+    "SERVO_MAIN_RELEASE": 2,
+    "SERVO_CANDIDATE_LOCK": 3,
+    "SERVO_CANDIDATE_RELEASE": 4,
     "LOCK_ALL": 5,
     "RELEASE_ALL": 6,
     "FORCE_ASCENT": 7,
     "FORCE_DEPLOY": 8,
     "FORCE_DESCENT": 9,
     "FORCE_LANDED": 10,
-    "RESET": 11,
 }
 
 # FORCE_DEPLOY(낙하산 즉시 사출)만 안전 타이머를 건다 - ASCENT 진입 직후
@@ -264,28 +266,18 @@ LORA_ACK_RESULT_NAMES = {
     1: "INVALID_COMMAND",
     2: "NOT_ALLOWED",
     3: "EXECUTION_FAILED",
-    4: "RECEIVED",  # CRC/패킷 검증 통과, 아직 상태머신이 처리하기 전
+    0xFF: "NONE",
 }
-
-# comet_lora.lua는 명령 하나당 ACK를 두 번 보낸다: CRC 검증 직후 즉시
-# RECEIVED, 그리고 상태머신이 큐에서 꺼내 실제 처리한 뒤 최종 결과
-# (OK/NOT_ALLOWED/EXECUTION_FAILED). lora.py의 _send_command_and_wait_ack는
-# 같은 sequence로 두 번 다 받게 되므로, RECEIVED는 최종 응답이 아니라고
-# 구분해서 계속 대기해야 한다 (안 그러면 RECEIVED만 보고 "성공"으로 착각해
-# 다음 명령을 너무 일찍 보내고, 그 사이 FC가 마저 보내는 두 번째(진짜) ACK와
-# 반이중 라디오에서 충돌해 뒤이은 명령이 유실될 수 있다).
-LORA_ACK_RESULT_RECEIVED = 4
+LORA_ACK_RESULT_NONE = 0xFF
 
 # ---------------------------------------------------------------------------
-# SiK(MAVLink) 원격 명령 - LoRa와 동일한 comet_command_queue.lua 큐를 공유한다
-# (comet_mavlink.lua 참고). 명령 코드 자체는 LORA_COMMAND와 완전히 동일한
-# 값을 그대로 쓴다 - LoRa로 보내든 SiK로 보내든 FC 쪽 상태 검증/서보 제어/
-# ACK 로직이 똑같이 동작해야 하기 때문이다.
+# 구형 comet_mavlink.lua용 pack/unpack 호환 API. 최신 UP_TO_DATE 진입점은
+# comet_mavlink.lua를 require하지 않으므로 main.py는 이 경로로 명령을 보내지
+# 않는다. mission_features.py의 기존 공개 helper 호환을 위해서만 남겨 둔다.
 #
 # NAMED_VALUE_INT는 name(char[10]) + value(int32) + time_boot_ms만 있어서
 # sequence(0~255)/command(0~255)/aux(0~255, 결과 코드 또는 미사용)를
-# value 하나(3바이트)에 패킹한다 - comet_mavlink.lua의 pack_value()/
-# unpack_value()와 반드시 동일한 비트 배치를 써야 한다.
+# value 하나(3바이트)에 패킹한다.
 # ---------------------------------------------------------------------------
 MAVLINK_COMET_CMD_NAME = "COMET_CMD"
 MAVLINK_COMET_ACK_NAME = "COMET_ACK"
@@ -309,11 +301,19 @@ def unpack_comet_value(value: int):
 # 보냈는데 서보 출력이 실패한 경우 디버깅용으로 켜진다.
 LORA_FAULT_FLAG_NAMES = {
     0x01: "ACCEL_SENSOR_INVALID",
-    0x02: "POSITION_INVALID",
+    0x02: "ALTITUDE_INVALID",
     0x04: "VELOCITY_INVALID",
     0x08: "ASCENT_TIMEOUT",
     0x10: "DEPLOY_COMMAND_FAILED",
     0x20: "LORA_UNAVAILABLE",
+}
+
+LORA_STATUS_FLAG_NAMES = {
+    0x01: "POSITION_VALID",
+    0x02: "VELOCITY_VALID",
+    0x04: "ATTITUDE_VALID",
+    0x08: "ACCELERATION_VALID",
+    0x10: "ALTITUDE_VALID",
 }
 
 LORA_FLIGHT_STATE_NAMES = ["READY", "ASCENT", "DEPLOY", "DESCENT", "LANDED"]
@@ -322,10 +322,9 @@ LORA_FLIGHT_STATE_NAMES = ["READY", "ASCENT", "DEPLOY", "DESCENT", "LANDED"]
 # COM6과는 별개의 실제 물리 장치 - DX-LR03 LoRa 모듈의 지상측 USB-TTL 어댑터로 추정).
 LORA_SERIAL_PORT = "COM18"
 
-# DX-LR03 모듈 공장 기본값(9600/8N1). comet_config.lua의 CONFIG.LORA.BAUD와
-# 반드시 같은 값이어야 한다 (예전에 57600으로 바꾸는 걸 검토하다가 lua 쪽만
-# 바뀌고 여기가 안 맞았던 적이 있음 - 값 바꿀 땐 양쪽 다 확인할 것).
-LORA_BAUDRATE = 9600
+# UP_TO_DATE/modules/comet_config.lua의 CONFIG.LORA.BAUD와 동일해야 한다.
+# 지상 LoRa 모듈도 57600/8N1 투명전송 모드로 설정되어 있어야 한다.
+LORA_BAUDRATE = 57600
 
 # LoRa 명령에 sequence(0~255, wraparound)를 붙여 재전송을 구분한다.
 LORA_ACK_TIMEOUT_SEC = 2.0

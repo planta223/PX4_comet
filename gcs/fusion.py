@@ -6,8 +6,10 @@ main.py가 매 프레임 호출해서, 필드별로 SiK/LoRa 중 어느 값을 G
 올릴지 결정한다 - sik.py/lora.py는 이 판단을 하지 않고 받은 걸 무조건
 큐/CSV로 흘려보내기만 하고(파이프라인), main.py는 여기서 나온 결과를
 표시/필터링만 한다(소비자) - "판단"은 이 파일 하나로 모은다. 정책(고정):
-  - 위치: 항상 LoRa 우선 (SiK 건강과 무관), LoRa 죽으면 SiK 자체 칼만필터 위치
-  - 자세: SiK ATTITUDE만, 폴백 없음 (LoRa는 위치값만 보냄)
+  - 수평 위치: 유효한 LoRa 위경도 우선, 없으면 SiK 자체 칼만필터 위치
+  - 고도: 유효한 LoRa startup-pressure 기준 상대고도 우선, 없으면 SiK
+    barometer/KF 고도. 수평 위치와 독립적으로 source를 추적한다.
+  - 자세: SiK ATTITUDE만, 폴백 없음
   - 가속도: SiK RAW_IMU만, 폴백 없음
   - 속도: SiK 자체 칼만필터, SiK 죽으면 LoRa 위치를 전용 칼만필터에 태워 추정
   - 로켓 상태: LoRa 텔레메트리 우선, LoRa 죽으면 SiK STATUSTEXT
@@ -23,6 +25,8 @@ main.py가 매 프레임 호출해서, 필드별로 SiK/LoRa 중 어느 값을 G
 리셋하지 않는다 (마지막으로 알려진 상태가 더 유용한 정보이기 때문).
 """
 
+import math
+
 import config
 from kalman import KalmanFilter6D
 
@@ -31,10 +35,16 @@ def is_link_alive(last_seen, timeout_sec, now) -> bool:
     return last_seen is not None and (now - last_seen) <= timeout_sec
 
 
+def _valid_number(value) -> bool:
+    return isinstance(value, (int, float)) and math.isfinite(value)
+
+
 class DataFusion:
     def __init__(self):
-        self._position = (0.0, 0.0, 0.0)
+        self._horizontal_position = (0.0, 0.0)
+        self._altitude = 0.0
         self._position_source = None
+        self._altitude_source = None
         self._attitude = (0.0, 0.0, 0.0)  # radians
         self._attitude_source = None
         self._accel = None
@@ -69,27 +79,53 @@ class DataFusion:
         if lora_pos_sample is not None:
             sample_ts = lora_pos_sample["timestamp"]
             if sample_ts != self._fallback_kf_last_sample_ts:
-                self._fallback_kf.update_horizontal((lora_pos_sample["pos_e"], lora_pos_sample["pos_n"]))
-                self._fallback_kf.update_vertical(lora_pos_sample["alt"])
+                if self._lora_position_valid(lora_pos_sample):
+                    self._fallback_kf.update_horizontal((lora_pos_sample["pos_e"], lora_pos_sample["pos_n"]))
+                if self._lora_altitude_valid(lora_pos_sample):
+                    self._fallback_kf.update_vertical(lora_pos_sample["alt"])
                 self._fallback_kf_last_sample_ts = sample_ts
 
         state = self._fallback_kf.get_state()
         self._velocity = (state["vel_e"], state["vel_n"], state["vel_z"])
         self._velocity_source = "kf_fallback"
 
+    @staticmethod
+    def _lora_position_valid(sample) -> bool:
+        if sample is None or sample.get("position_valid", True) is not True:
+            return False
+        return _valid_number(sample.get("pos_e")) and _valid_number(sample.get("pos_n"))
+
+    @staticmethod
+    def _lora_altitude_valid(sample) -> bool:
+        if sample is None or sample.get("altitude_valid", True) is not True:
+            return False
+        altitude = sample.get("alt")
+        return _valid_number(altitude) and abs(altitude) < config.LORA_ALTITUDE_SATURATION_M
+
     def update(
         self, now, sik_alive, lora_alive,
         sik_pos, sik_attitude_rad, sik_accel, sik_vel, sik_rocket_state,
         lora_pos_sample, lora_rocket_state,
     ) -> dict:
-        # 위치: 항상 LoRa 우선, LoRa 없으면 SiK
-        if lora_alive and lora_pos_sample is not None:
-            self._position = (lora_pos_sample["pos_e"], lora_pos_sample["pos_n"], lora_pos_sample["alt"])
+        # 수평 위치와 고도는 유효성이 서로 독립적이다. 예를 들어 GPS fix가
+        # 없어도 FC barometer 고도는 계속 유효할 수 있다.
+        if lora_alive and self._lora_position_valid(lora_pos_sample):
+            self._horizontal_position = (lora_pos_sample["pos_e"], lora_pos_sample["pos_n"])
             self._position_source = "lora"
-        elif sik_alive and sik_pos is not None:
-            self._position = sik_pos
+        elif (
+            sik_alive and sik_pos is not None
+            and _valid_number(sik_pos[0]) and _valid_number(sik_pos[1])
+        ):
+            self._horizontal_position = (sik_pos[0], sik_pos[1])
             self._position_source = "sik"
-        # 둘 다 없으면 마지막 값 유지
+
+        if lora_alive and self._lora_altitude_valid(lora_pos_sample):
+            self._altitude = lora_pos_sample["alt"]
+            self._altitude_source = "lora_baro"
+        elif sik_alive and sik_pos is not None and _valid_number(sik_pos[2]):
+            self._altitude = sik_pos[2]
+            self._altitude_source = "sik_fallback"
+        # 양쪽 모두 없거나 invalid면 마지막 유효 고도/source를 freeze한다.
 
         # 자세: SiK 전용, 폴백 없음
         if sik_alive and sik_attitude_rad is not None:
@@ -118,8 +154,9 @@ class DataFusion:
             self._rocket_state_source = "sik"
 
         return {
-            "position": self._position,
+            "position": (*self._horizontal_position, self._altitude),
             "position_source": self._position_source,
+            "altitude_source": self._altitude_source,
             "attitude": self._attitude,
             "attitude_source": self._attitude_source,
             "accel": self._accel,

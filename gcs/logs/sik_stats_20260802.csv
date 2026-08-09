@@ -1,0 +1,1 @@
+timestamp,rate_hz,jitter_ms,link_loss_pct,pos_std_e,pos_std_n,pos_std_alt,vel_std_e,vel_std_n,vel_std_z

@@ -209,14 +209,29 @@ class _OriginTracker:
 
 
 class _BaroOriginTracker:
-    """첫 기압값을 기준(0m)으로 삼아 상대 고도로 환산한다."""
+    """GCS 세션의 첫 기압값을 유지하되 FC reboot 때만 새 기준을 잡는다."""
 
     def __init__(self):
         self.press0_hpa = None
+        self.last_time_boot_ms = None
 
-    def set_if_needed(self, press_hpa):
+    def set_if_needed(self, press_hpa, time_boot_ms=None):
+        # 단순 SiK 링크 재연결이면 FC time_boot_ms가 계속 증가하므로 기준을
+        # 유지한다. FC reboot로 시간이 뒤로 간 경우에만 새 기압 기준을 잡는다.
+        if (
+            time_boot_ms is not None
+            and self.last_time_boot_ms is not None
+            and time_boot_ms + 1000 < self.last_time_boot_ms
+        ):
+            self.press0_hpa = None
+            print("[sik] FC reboot 감지 - barometer altitude 기준 재설정")
+        if time_boot_ms is not None:
+            self.last_time_boot_ms = time_boot_ms
         if self.press0_hpa is None:
             self.press0_hpa = press_hpa
+
+    def is_set(self):
+        return self.press0_hpa is not None
 
     def to_relative_altitude(self, press_hpa):
         # 국제표준대기 근사식. press0을 기준(0m)으로 잡으므로 해수면
@@ -263,6 +278,10 @@ def run_sik_pipeline(trajectory_queue: "queue.Queue", status_queue: "queue.Queue
     # 보관해뒀다가 다음 연결의 초기 자세로 이어서 쓴다 - 칼만필터 자체(위치/
     # 속도)는 기존 설계 그대로 매 연결마다 깨끗하게 새로 시작한다.
     last_attitude_holder = {"roll": 0.0, "pitch": 0.0, "yaw": 0.0}
+    # 라디오/케이블 순단만으로 SiK 상대고도가 0으로 재설정되지 않도록 연결
+    # 루프 바깥에서 유지한다. SCALED_PRESSURE time_boot_ms가 뒤로 갈 때(FC
+    # reboot)에는 tracker가 스스로 새 기준을 잡는다.
+    baro_origin = _BaroOriginTracker()
 
     try:
         while True:
@@ -270,7 +289,10 @@ def run_sik_pipeline(trajectory_queue: "queue.Queue", status_queue: "queue.Queue
                 conn = _open_connection(cfg)
                 _connection = conn
                 _request_message_rates(conn, cfg)
-                _receive_loop(conn, trajectory_queue, status_queue, csv_state, cfg, shared_origin, last_attitude_holder)
+                _receive_loop(
+                    conn, trajectory_queue, status_queue, csv_state, cfg,
+                    shared_origin, last_attitude_holder, baro_origin,
+                )
             except Exception as exc:  # noqa: BLE001 - 어떤 이유로든 끊기면 재연결
                 _connection = None
                 print(f"[sik] 연결 끊김/오류 - {cfg.SIK_RECONNECT_DELAY_SEC}s 후 재연결 시도: {exc}")
@@ -279,7 +301,10 @@ def run_sik_pipeline(trajectory_queue: "queue.Queue", status_queue: "queue.Queue
         csv_state.close()
 
 
-def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Queue", csv_state, cfg, shared_origin, last_attitude_holder):
+def _receive_loop(
+    conn, trajectory_queue: "queue.Queue", status_queue: "queue.Queue",
+    csv_state, cfg, shared_origin, last_attitude_holder, baro_origin,
+):
     """
     연결 하나에 대한 실제 수신 루프. 연결이 죽으면(예외 발생) 그대로
     위(run_sik_pipeline)로 전파되어 재연결 로직이 처리한다.
@@ -296,7 +321,6 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
     """
     kf = KalmanFilter6D()
     origin = _OriginTracker(shared_origin)
-    baro_origin = _BaroOriginTracker()
 
     last_predict_time = None
     last_raw_gps = (None, None, None)
@@ -310,6 +334,7 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
     # 같은 패턴) - 사후분석용 로깅이 목적이라 굳이 별도 파일로 안 쪼갰다.
     last_gps_quality = (None, None, None)  # fix_type, satellites_visible, hdop
     last_baro = (None, None)  # press_hpa, baro_alt_m
+    baro_valid_this_connection = False
     last_battery = (None, None, None)  # voltage_v, current_a, cpu_load_pct
 
     # 패킷 품질/위치·속도 안정성 정량 통계 (stats.py) - 연결 하나당 새로 시작
@@ -406,6 +431,8 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
                 "live_pos_e": state["pos_e"],
                 "live_pos_n": state["pos_n"],
                 "live_alt": state["alt"],
+                "sik_position_valid": origin.alt0 is not None,
+                "sik_altitude_valid": baro_valid_this_connection,
                 "accel_e": accel_e,
                 "accel_n": accel_n,
                 "accel_z": accel_z,
@@ -458,6 +485,8 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
             origin.set_if_needed(lat, lon, alt)
             pos_e, pos_n, rel_alt = origin.to_enu(lat, lon, alt)
             kf.update_horizontal((pos_e, pos_n))
+            # GPS rel_alt는 CSV/진단용 원시값일 뿐 수직 KF 관측에는 넣지 않는다.
+            # 수직 관측은 아래 SCALED_PRESSURE의 barometer altitude만 사용한다.
 
             status_queue.put({
                 "source": "sik",
@@ -507,8 +536,9 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
             status_queue.put(payload)
 
         elif msg_type == "NAMED_VALUE_FLOAT":
-            # comet_mavlink.lua가 보내는 COMET_ACK - 서보 잠금/사출 등
-            # COMET_CMD(mission_features.send_mavlink_command)의 실행 결과.
+            # 구형 comet_mavlink.lua가 보내던 COMET_ACK 호환 처리. 최신
+            # comet_main.lua는 이 모듈을 require하지 않아 정상 운용 중에는
+            # 이 이름의 메시지가 오지 않으며 main.py도 COMET_CMD를 보내지 않는다.
             # FC는 추가 모듈 없이 ArduPilot 내장 gcs:send_named_float()로
             # 보내므로 NAMED_VALUE_INT가 아니라 NAMED_VALUE_FLOAT으로 온다
             # (COMET_CMD 쪽, 즉 GCS->FC 방향은 그대로 NAMED_VALUE_INT).
@@ -562,9 +592,10 @@ def _receive_loop(conn, trajectory_queue: "queue.Queue", status_queue: "queue.Qu
             # 자체 칼만필터의 수직(고도) 관측 - GPS(update_horizontal, ~5Hz)와
             # 독립적으로 도착하는 대로 바로 반영해 기압계의 빠른 갱신률을
             # 그대로 활용한다.
-            baro_origin.set_if_needed(msg.press_abs)
+            baro_origin.set_if_needed(msg.press_abs, msg.time_boot_ms)
             baro_alt = baro_origin.to_relative_altitude(msg.press_abs)
             kf.update_vertical(baro_alt)
+            baro_valid_this_connection = True
             # R_vertical 실측 검증(칼만필터 튜닝)을 나중에 CSV로 할 수 있게
             # 원값도 같이 남긴다 - 전에는 필터링된 결과만 남고 이 raw 값
             # 자체는 어디에도 기록이 안 됐다.

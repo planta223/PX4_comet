@@ -1,0 +1,1 @@
+timestamp,rate_hz,jitter_ms,seq_loss_pct,crc_fail_count,pos_std_e,pos_std_n,pos_std_alt

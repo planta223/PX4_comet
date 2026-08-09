@@ -518,3 +518,4 @@
 {"ts": 1785332731.6035612, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
 {"ts": 1785332732.0631018, "type": "lora_command_result", "command_name": "RELEASE_ALL", "success": true, "result": "NOT_ALLOWED", "attempts": 1}
 {"ts": 1785332732.8664353, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785670667.382752, "type": "force_transition_armed_toggled", "armed": true}

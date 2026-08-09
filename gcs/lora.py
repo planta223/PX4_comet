@@ -6,16 +6,13 @@ FC측 comet_main.lua와 커스텀 바이너리 프로토콜로 통신한다. LoR
 자체는 프레이밍을 안 해주므로(투명전송), 헤더 바이트 + CRC-8로 우리가
 직접 연속 바이트스트림에서 프레임을 잘라낸다 (_FrameParser).
 
-3가지 프레임 (config.py의 LORA_* 상수와 comet_config.lua의 CONFIG.LORA에
-정확히 대응):
-  - TELEMETRY (0xA5, 17B, FC->GCS): 위치/비행상태/fault_flags만 (속도/자세는
-    SiK/mavlink 전용 - fusion.py 참고). 위치는 절대 위경도가 아니라 HOME
-    기준 north/east 오프셋(cm 정밀도, int16)이라 origin 변환 없이 그대로
-    로컬 미터 좌표로 쓴다. comet_lora.lua의 send_telemetry()와 바이트
-    단위로 동일한 레이아웃 (정확한 필드/스케일은 config.py의
-    LORA_TELEMETRY_LENGTH 주석 참고).
-  - COMMAND   (0x5A, 4B,  GCS->FC): 서보 lock/release, READY 리셋 등.
-  - ACK       (0xA6, 4B,  FC->GCS): COMMAND에 대한 응답.
+두 프레임 (config.py의 LORA_* 상수와 comet_config.lua의 CONFIG.LORA에 대응):
+  - TELEMETRY (0xA5, 36B, FC->GCS): 절대 위경도, 기압 상대고도, NED 속도,
+    자세, 상태/고장 비트와 마지막 명령 ACK를 포함한다.
+  - COMMAND   (0x5A, 4B, GCS->FC): sequence와 명령 코드.
+
+별도 ACK 프레임은 없다. FC가 처리한 마지막 명령의 sequence/result가 이후
+telemetry에 반복되므로, 명령 대기 중에도 telemetry를 정상 파싱·기록한다.
 
 sik.py와 동일하게 결과는 큐에 push만 한다 (누가 구독하는지 모름).
 커맨드 송신은 시리얼 포트를 소유한 이 파이프라인 스레드만 수행한다 -
@@ -36,9 +33,9 @@ import config
 import shared_state
 import stats
 
-# comet_lora.lua send_telemetry()의 바이트 레이아웃과 정확히 일치.
-# 자세한 필드 설명은 config.py의 LORA_TELEMETRY_LENGTH 주석 참고.
-_TELEMETRY_STRUCT = struct.Struct("<4BI2hiB")
+# 5x uint8, uint32, 3x int32, 6x int16, ack_seq, ack_result, crc8.
+_TELEMETRY_STRUCT = struct.Struct("<5BIiii6h3B")
+assert _TELEMETRY_STRUCT.size == config.LORA_TELEMETRY_LENGTH
 
 
 def _crc8(data) -> int:
@@ -67,7 +64,6 @@ class _FrameParser:
         self._buf = bytearray()
         self._frame_lengths = {
             cfg.LORA_TELEMETRY_HEADER: cfg.LORA_TELEMETRY_LENGTH,
-            cfg.LORA_ACK_HEADER: cfg.LORA_ACK_LENGTH,
         }
         # 헤더는 맞았는데 CRC가 틀린 경우만 센다(=수신은 됐는데 깨진 패킷).
         # 헤더 자체가 안 맞는 바이트는 그냥 노이즈/재동기화라 카운트 안 함.
@@ -96,22 +92,25 @@ class _FrameParser:
 
 def parse_lora_packet(raw_bytes) -> dict:
     """
-    raw_bytes: _FrameParser가 CRC 검증까지 끝낸 완전한 프레임
-    (텔레메트리 21B 또는 ACK 4B). 헤더 값으로 종류를 구분해 언패킹한다.
+    raw_bytes: 최신 Lua 형식의 완전한 telemetry frame. 방어적으로 길이와
+    CRC를 다시 검사해 parser를 우회한 호출도 불완전 프레임을 받지 않는다.
     """
-    header = raw_bytes[0]
-    if header == config.LORA_TELEMETRY_HEADER:
-        return _parse_telemetry(raw_bytes)
-    if header == config.LORA_ACK_HEADER:
-        return _parse_ack(raw_bytes)
-    raise ValueError(f"알 수 없는 LoRa 프레임 헤더: {header:#x}")
+    if len(raw_bytes) != config.LORA_TELEMETRY_LENGTH:
+        raise ValueError(f"잘못된 LoRa telemetry 길이: {len(raw_bytes)}")
+    if raw_bytes[0] != config.LORA_TELEMETRY_HEADER:
+        raise ValueError(f"알 수 없는 LoRa 프레임 헤더: {raw_bytes[0]:#x}")
+    if _crc8(raw_bytes[:-1]) != raw_bytes[-1]:
+        raise ValueError("LoRa telemetry CRC 불일치")
+    return _parse_telemetry(raw_bytes)
 
 
 def _parse_telemetry(raw_bytes) -> dict:
     (
-        _header, seq, flight_state, fault_flags, _time_ms,
-        north_raw, east_raw, alt_raw,
-        _crc,
+        _header, sequence, flight_state, status_flags, fault_flags, time_ms,
+        latitude_raw, longitude_raw, altitude_raw,
+        velocity_n_raw, velocity_e_raw, velocity_d_raw,
+        roll_raw, pitch_raw, yaw_raw,
+        ack_sequence, ack_result, _crc,
     ) = _TELEMETRY_STRUCT.unpack(raw_bytes)
 
     state_names = config.LORA_FLIGHT_STATE_NAMES
@@ -121,28 +120,48 @@ def _parse_telemetry(raw_bytes) -> dict:
     # 났다"만이 아니라 "왜"까지 GCS 화면/CSV에 그대로 남기기 위함
     # (config.py의 LORA_FAULT_FLAG_NAMES 참고).
     faults = [name for bit, name in config.LORA_FAULT_FLAG_NAMES.items() if fault_flags & bit]
+    statuses = [name for bit, name in config.LORA_STATUS_FLAG_NAMES.items() if status_flags & bit]
+
+    latitude = latitude_raw / config.LORA_LAT_LON_SCALE
+    longitude = longitude_raw / config.LORA_LAT_LON_SCALE
+    altitude = altitude_raw / config.LORA_ALTITUDE_SCALE
+    position_valid = (
+        bool(status_flags & 0x01)
+        and not (latitude_raw == 0 and longitude_raw == 0)
+        and -90.0 <= latitude <= 90.0
+        and -180.0 <= longitude <= 180.0
+    )
+    altitude_valid = (
+        bool(status_flags & 0x10)
+        and abs(altitude) < config.LORA_ALTITUDE_SATURATION_M
+    )
 
     return {
         "frame_type": "telemetry",
-        "seq": seq,
+        "sequence": sequence,
+        "seq": sequence,  # 기존 내부 통계 API 호환
         "flight_state": state_name,
+        "flight_state_code": flight_state,
+        "status_flags": status_flags,
+        "statuses": statuses,
         "fault_flags": fault_flags,
         "faults": faults,
-        # comet_sensor.lua가 이미 HOME 기준으로 계산해서 보내므로(절대
-        # 위경도 아님) origin 변환 없이 그대로 로컬 미터 좌표로 쓴다.
-        "pos_n": north_raw / 100.0,
-        "pos_e": east_raw / 100.0,
-        "alt": alt_raw / 100.0,
-    }
-
-
-def _parse_ack(raw_bytes) -> dict:
-    _header, seq, result, _crc = raw_bytes
-    return {
-        "frame_type": "ack",
-        "seq": seq,
-        "result": result,
-        "result_name": config.LORA_ACK_RESULT_NAMES.get(result, "UNKNOWN"),
+        "time_ms": time_ms,
+        "latitude": latitude,
+        "longitude": longitude,
+        "position_valid": position_valid,
+        "altitude": altitude,
+        "alt": altitude,  # 기존 소비자 키 호환
+        "altitude_valid": altitude_valid,
+        "velocity_n": velocity_n_raw / config.LORA_VELOCITY_SCALE,
+        "velocity_e": velocity_e_raw / config.LORA_VELOCITY_SCALE,
+        "velocity_d": velocity_d_raw / config.LORA_VELOCITY_SCALE,
+        "roll": roll_raw / config.LORA_ATTITUDE_SCALE,
+        "pitch": pitch_raw / config.LORA_ATTITUDE_SCALE,
+        "yaw": yaw_raw / config.LORA_ATTITUDE_SCALE,
+        "ack_sequence": ack_sequence,
+        "ack_result": ack_result,
+        "ack_result_name": config.LORA_ACK_RESULT_NAMES.get(ack_result, "UNKNOWN"),
     }
 
 
@@ -157,16 +176,27 @@ def _ensure_csv_writer(cfg, output_dir=None):
     os.makedirs(output_dir, exist_ok=True)
     filename = datetime.now().strftime(cfg.LORA_CSV_FILENAME_PATTERN)
     filepath = os.path.join(output_dir, filename)
-    is_new = not os.path.exists(filepath)
+    columns = [
+        "timestamp", "sequence", "flight_state", "status_flags", "fault_flags", "time_ms",
+        "latitude", "longitude", "pos_n", "pos_e", "altitude",
+        "velocity_n", "velocity_e", "velocity_d", "roll", "pitch", "yaw",
+        "ack_sequence", "ack_result", "ack_result_name", "faults",
+    ]
+
+    # 같은 날짜의 구형 CSV가 있으면 서로 다른 스키마의 행을 섞지 않는다.
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+        with open(filepath, newline="", encoding="utf-8") as existing:
+            existing_header = next(csv.reader(existing), [])
+        if existing_header != columns:
+            stem, extension = os.path.splitext(filepath)
+            filepath = f"{stem}_protocol_v2{extension}"
+
+    is_new = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
 
     f = open(filepath, mode="a", newline="", encoding="utf-8")
     writer = csv.writer(f)
     if is_new:
-        writer.writerow([
-            "timestamp", "seq", "flight_state",
-            "pos_n", "pos_e", "alt",
-            "fault_flags", "faults",
-        ])
+        writer.writerow(columns)
     return f, writer
 
 
@@ -196,11 +226,26 @@ def _handle_telemetry_frame(raw_frame, trajectory_queue, status_queue, csv_state
     telemetry_stats["rate"].record(now)
     telemetry_stats["seq_loss"].record(telemetry["seq"])
 
-    # comet_sensor.lua가 이미 HOME 기준 로컬 좌표로 계산해서 보내므로
-    # (절대 위경도가 아님) origin(SharedOrigin) 변환이 필요 없다 - 파라미터는
-    # sik.py 파이프라인 호출 규약과 맞추기 위해 그대로 받아만 두고 안 쓴다.
-    pos_n, pos_e = telemetry["pos_n"], telemetry["pos_e"]
-    telemetry_stats["pos"].record((pos_e, pos_n, telemetry["alt"]))
+    pos_e = pos_n = None
+    if telemetry["position_valid"]:
+        origin.set_if_needed(telemetry["latitude"], telemetry["longitude"])
+        pos_e, pos_n = origin.to_en(telemetry["latitude"], telemetry["longitude"])
+
+    altitude = telemetry["altitude"] if telemetry["altitude_valid"] else None
+    if (
+        altitude is not None
+        and abs(altitude) > cfg.LORA_ALTITUDE_WARNING_ABS_M
+        and now - telemetry_stats.get("last_altitude_warning", 0.0) >= 5.0
+    ):
+        print(f"[lora] 비현실적 고도 수신(클리핑하지 않음): {altitude:.2f} m")
+        telemetry_stats["last_altitude_warning"] = now
+
+    if pos_e is not None and altitude is not None:
+        telemetry_stats["pos"].record((pos_e, pos_n, altitude))
+
+    telemetry_stats["last_telemetry_sequence"] = telemetry["sequence"]
+    telemetry_stats["last_ack_sequence"] = telemetry["ack_sequence"]
+    telemetry_stats["last_ack_result"] = telemetry["ack_result"]
 
     # sik.py와 동일하게 이 파이프라인은 "지금 기록할 만한 상태인지" 스스로
     # 판단하지 않는다 - 그 판단은 fusion.py 한 곳에서만 하고, 여기는 받은
@@ -210,13 +255,19 @@ def _handle_telemetry_frame(raw_frame, trajectory_queue, status_queue, csv_state
     trajectory_queue.put({
         "pos_e": pos_e,
         "pos_n": pos_n,
-        "alt": telemetry["alt"],
+        "position_valid": pos_e is not None,
+        "alt": altitude,
+        "altitude_valid": altitude is not None,
         "timestamp": now,
     })
     csv_state.csv_writer.writerow([
-        now, telemetry["seq"], telemetry["flight_state"],
-        telemetry["pos_n"], telemetry["pos_e"], telemetry["alt"],
-        telemetry["fault_flags"], ";".join(telemetry["faults"]),
+        now, telemetry["sequence"], telemetry["flight_state"], telemetry["status_flags"],
+        telemetry["fault_flags"], telemetry["time_ms"], telemetry["latitude"],
+        telemetry["longitude"], pos_n, pos_e, altitude,
+        telemetry["velocity_n"], telemetry["velocity_e"], telemetry["velocity_d"],
+        telemetry["roll"], telemetry["pitch"], telemetry["yaw"],
+        telemetry["ack_sequence"], telemetry["ack_result"],
+        telemetry["ack_result_name"], ";".join(telemetry["faults"]),
     ])
     # sik.py와 동일한 이유(CSV_FLUSH_INTERVAL_SEC 주석 참고)로 매 프레임
     # 대신 일정 간격으로만 flush - 반이중 라디오라 명령 송신 중에도 이
@@ -228,8 +279,11 @@ def _handle_telemetry_frame(raw_frame, trajectory_queue, status_queue, csv_state
 
     status_queue.put({
         "source": "lora", "last_seen": now, "rocket_state": telemetry["flight_state"],
+        "status_flags": telemetry["status_flags"],
         "fault_flags": telemetry["fault_flags"], "faults": telemetry["faults"],
+        "ack_sequence": telemetry["ack_sequence"], "ack_result": telemetry["ack_result"],
     })
+    return telemetry
 
 
 def _send_command_and_wait_ack(
@@ -237,29 +291,33 @@ def _send_command_and_wait_ack(
     trajectory_queue, status_queue, csv_state, origin, telemetry_stats,
 ):
     """
-    커맨드 프레임을 전송하고 최대 cfg.LORA_ACK_TIMEOUT_SEC 동안 seq가
-    일치하는 ACK를 기다린다. 실패하면 cfg.LORA_COMMAND_RETRY_COUNT회까지
-    재시도한다. 같은 논리적 커맨드는 재시도 내내 동일한 seq를 재사용한다
+    커맨드 프레임을 전송하고 최대 cfg.LORA_ACK_TIMEOUT_SEC 동안 telemetry의
+    ack_sequence가 일치하는 최종 결과를 기다린다. 같은 논리적 커맨드는
+    재시도 내내 동일한 seq를 재사용한다
     - comet_main.lua의 process_command_packet()이 (seq, command) 쌍으로
     중복 실행을 막고 캐시된 ACK를 재전송하기 때문에, 재시도마다 새
     seq를 쓰면 FC가 이미 처리한 커맨드를 새 커맨드로 인식해 중복 실행할
     수 있다.
 
-    comet_lora.lua는 명령 하나당 같은 seq로 ACK를 두 번 보낸다: CRC 검증
-    직후 즉시 RECEIVED(중간 응답), 그리고 상태머신이 실제로 처리한 뒤
-    최종 결과(OK/NOT_ALLOWED/EXECUTION_FAILED/INVALID_COMMAND). RECEIVED는
-    최종 응답이 아니므로 여기서 리턴하지 않고 같은 데드라인 안에서 계속
-    기다린다 - RECEIVED만 보고 성공 처리하면 FC가 두 번째(진짜) ACK를 마저
-    보내는 도중에 다음 커맨드를 반이중 라디오로 전송하게 돼 충돌이 나고,
-    뒤이은 커맨드가 FC에 아예 안 닿는 문제가 있었다.
-
     대기 중 도착하는 텔레메트리 프레임도 놓치지 않고 정상 처리한다
-    (반이중 하드웨어라 명령 송신 중에는 새 텔레메트리가 안 오지만, 응답
-    ACK 직후 텔레메트리가 같은 버퍼에 이어 도착할 수 있다).
+    (CSV/링크 last_seen 포함). 송신 직전 OS 수신 버퍼를 먼저 비우고 그때의
+    telemetry sequence를 baseline으로 잡아, 버퍼에 남아 있던 예전 ACK를
+    이번 명령 결과로 오인하지 않는다.
     """
     frame = _build_command_frame(command_name, seq)
 
     for attempt in range(1, cfg.LORA_COMMAND_RETRY_COUNT + 1):
+        # 송신 전에 이미 도착해 있던 telemetry는 정상 처리하되 ACK 후보에서는
+        # 제외한다. 반이중 링크의 지연 프레임이 다음 명령에 섞이는 것을 방지한다.
+        pending = ser.in_waiting
+        if pending:
+            for raw_frame in parser.feed(ser.read(pending)):
+                _handle_telemetry_frame(
+                    raw_frame, trajectory_queue, status_queue, csv_state,
+                    origin, telemetry_stats, cfg,
+                )
+
+        baseline_sequence = telemetry_stats.get("last_telemetry_sequence")
         ser.write(frame)
         deadline = time.time() + cfg.LORA_ACK_TIMEOUT_SEC
 
@@ -269,15 +327,28 @@ def _send_command_and_wait_ack(
                 continue
 
             for raw_frame in parser.feed(data):
-                if raw_frame[0] == cfg.LORA_TELEMETRY_HEADER:
-                    _handle_telemetry_frame(raw_frame, trajectory_queue, status_queue, csv_state, origin, telemetry_stats, cfg)
+                telemetry = _handle_telemetry_frame(
+                    raw_frame, trajectory_queue, status_queue, csv_state,
+                    origin, telemetry_stats, cfg,
+                )
+                delta = None if baseline_sequence is None else (
+                    telemetry["sequence"] - baseline_sequence
+                ) & 0xFF
+                if baseline_sequence is None:
+                    # GCS가 FC보다 늦게 재연결되면 첫 frame의 ACK는 이전 GCS
+                    # 세션 명령일 수 있다. 첫 frame은 baseline으로만 사용하고,
+                    # 반복 송신되는 다음 telemetry부터 이번 명령과 매칭한다.
+                    baseline_sequence = telemetry["sequence"]
                     continue
-
-                parsed = parse_lora_packet(raw_frame)
-                if parsed["seq"] == seq:
-                    if parsed["result"] == cfg.LORA_ACK_RESULT_RECEIVED:
-                        continue  # 중간 응답 - 최종 결과 ACK를 계속 기다린다
-                    return True, parsed["result_name"], attempt
+                is_new_telemetry = 0 < delta < 128
+                if not is_new_telemetry:
+                    continue
+                if (
+                    telemetry["ack_sequence"] == seq
+                    and telemetry["ack_result"] != cfg.LORA_ACK_RESULT_NONE
+                ):
+                    result = telemetry["ack_result"]
+                    return result == 0, telemetry["ack_result_name"], attempt
 
     return False, None, cfg.LORA_COMMAND_RETRY_COUNT
 
@@ -287,12 +358,14 @@ def enqueue_command(command_queue, command_name: str) -> None:
     GUI 스레드에서 호출한다. 실제 시리얼 송신/ACK 대기는 run_lora_pipeline
     스레드가 command_queue를 드레인하면서 전담한다.
     """
+    if command_name not in config.LORA_COMMAND:
+        raise ValueError(f"최신 Lua에서 지원하지 않는 LoRa 명령: {command_name}")
     command_queue.put({"command_name": command_name})
 
 
 def send_state_reset_packet(command_queue) -> None:
-    """로켓 상태를 READY로 리셋하는 RESET 커맨드를 큐에 넣는다."""
-    enqueue_command(command_queue, "RESET")
+    """최신 Lua에는 RESET command code가 없으므로 잘못된 frame 송신을 막는다."""
+    raise ValueError("최신 Pixhawk Lua 프로토콜은 READY 상태 리셋 명령을 지원하지 않습니다")
 
 
 def _open_connection(cfg):
@@ -348,6 +421,10 @@ def _receive_loop(ser, trajectory_queue, status_queue, command_queue, csv_state,
         "seq_loss": stats.SeqLossTracker(),
         "pos": stats.Vec3RollingStats(cfg.STATS_ROLLING_WINDOW),
         "last_csv_flush": 0.0,
+        "last_telemetry_sequence": None,
+        "last_ack_sequence": None,
+        "last_ack_result": cfg.LORA_ACK_RESULT_NONE,
+        "last_altitude_warning": 0.0,
     }
     last_stats_report = 0.0
 
@@ -380,7 +457,14 @@ def _receive_loop(ser, trajectory_queue, status_queue, command_queue, csv_state,
             if request is not None:
                 command_name = request["command_name"]
                 seq = next_cmd_seq
-                next_cmd_seq = (next_cmd_seq + 1) % 256
+                # telemetry ACK에는 command code가 없으므로, 마지막으로 관측한
+                # 유효 ACK sequence와 같은 번호는 wraparound 때 한 번 건너뛴다.
+                if (
+                    telemetry_stats["last_ack_result"] != cfg.LORA_ACK_RESULT_NONE
+                    and seq == telemetry_stats["last_ack_sequence"]
+                ):
+                    seq = (seq + 1) % 256
+                next_cmd_seq = (seq + 1) % 256
 
                 success, result_name, attempts = _send_command_and_wait_ack(
                     ser, parser, command_name, seq, cfg,
@@ -390,6 +474,7 @@ def _receive_loop(ser, trajectory_queue, status_queue, command_queue, csv_state,
                     "source": "lora",
                     "command_result": {
                         "command_name": command_name,
+                        "sequence": seq,
                         "success": success,
                         "result": result_name,
                         "attempts": attempts,
@@ -401,6 +486,4 @@ def _receive_loop(ser, trajectory_queue, status_queue, command_queue, csv_state,
             continue
 
         for raw_frame in parser.feed(data):
-            if raw_frame[0] != cfg.LORA_TELEMETRY_HEADER:
-                continue  # 커맨드 대기 중이 아닐 때 도착한 ACK는 지연 응답 - 무시
             _handle_telemetry_frame(raw_frame, trajectory_queue, status_queue, csv_state, origin, telemetry_stats, cfg)

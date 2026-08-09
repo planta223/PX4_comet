@@ -1,0 +1,90 @@
+{"ts": 1785780022.7267401, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260804_030022", "trigger": "ascent"}
+{"ts": 1785780052.3722398, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780058.0553224, "type": "message", "text": "COMET: [FLIGHT] Descent condition detected", "severity": 6}
+{"ts": 1785780058.0553224, "type": "rocket_state_transition", "from_state": "ASCENT", "to_state": "DESCENT"}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] ASCENT -> DEPLOY", "severity": 6}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] Reason - descent speed condition", "severity": 6}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] Descent condition confirmed", "severity": 6}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] Deploy attempt 1", "severity": 6}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] Deploy command succeeded", "severity": 6}
+{"ts": 1785780058.5552087, "type": "message", "text": "COMET: [FLIGHT] Deploy - automatic", "severity": 6}
+{"ts": 1785780058.5552087, "type": "rocket_state_transition", "from_state": "DESCENT", "to_state": "DEPLOY"}
+{"ts": 1785780059.604879, "type": "message", "text": "COMET: [FLIGHT] Servo operation time complete", "severity": 6}
+{"ts": 1785780059.6111276, "type": "message", "text": "COMET: [FLIGHT] DEPLOY -> DESCENT", "severity": 6}
+{"ts": 1785780059.6111276, "type": "message", "text": "COMET: [FLIGHT] Reason - deploy operation complete", "severity": 6}
+{"ts": 1785780059.6111276, "type": "message", "text": "d", "severity": 6}
+{"ts": 1785780059.6138442, "type": "message", "text": "COMET: [FLIGHT] Landing condition detected", "severity": 6}
+{"ts": 1785780062.1871672, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 2}
+{"ts": 1785780062.1871672, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 2}
+{"ts": 1785780062.1871672, "type": "message", "text": "nge)", "severity": 2}
+{"ts": 1785780062.1871672, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_flig", "severity": 2}
+{"ts": 1785780062.1871672, "type": "message", "text": "ht_state", "severity": 2}
+{"ts": 1785780062.1871672, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780072.02058, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780072.02058, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780072.02058, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780074.6162367, "type": "message", "text": "EKF3 IMU0 origin set", "severity": 6}
+{"ts": 1785780074.6162367, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}
+{"ts": 1785780074.6162367, "type": "message", "text": "AHRS: EKF3 active", "severity": 6}
+{"ts": 1785780074.6162367, "type": "message", "text": "Field Elevation Set: 31m", "severity": 6}
+{"ts": 1785780074.7994416, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785780076.6941514, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785780081.719296, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785780081.9010057, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780081.9010057, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780081.9010057, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780082.6597137, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785780084.3800073, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785780085.0269444, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785780091.7881546, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780091.7881546, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780091.7881546, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780093.3313282, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_flig", "severity": 2}
+{"ts": 1785780093.3313282, "type": "message", "text": "ht_state", "severity": 2}
+{"ts": 1785780093.3313282, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780102.1905222, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780102.1914442, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780102.1914442, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780112.0598788, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780112.0704267, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780112.0704267, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780116.1790884, "type": "servo_command", "channel": 16, "pwm_us": 2000, "path": "sik"}
+{"ts": 1785780121.9241104, "type": "message", "text": "Lua: /APM/scripts/modules/comet_flight_state.lua:4", "severity": 7}
+{"ts": 1785780121.9241104, "type": "message", "text": "30: bad argument #6 to 'write' (argument out of ra", "severity": 7}
+{"ts": 1785780121.9241104, "type": "message", "text": "nge)", "severity": 7}
+{"ts": 1785780123.9791842, "type": "message", "text": "PreArm: Scripting: /APM/scripts/modules/comet_flig", "severity": 2}
+{"ts": 1785780123.9791842, "type": "message", "text": "ht_state", "severity": 2}
+{"ts": 1785780123.9791842, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780129.4916673, "type": "reboot_requested", "success": true}
+{"ts": 1785780129.679193, "type": "reboot_verify_servo_lock_sent", "channels": [16]}
+{"ts": 1785780132.718081, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785780132.718081, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785780134.2422526, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785780134.2422526, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785780134.2422526, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785780134.2422526, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "READY"}
+{"ts": 1785780134.2580342, "type": "message", "text": "COMET: [SENSOR] Sensor interface initialized", "severity": 6}
+{"ts": 1785780134.2580342, "type": "message", "text": "COMET: [SERVO] Servos initialized", "severity": 6}
+{"ts": 1785780134.2580342, "type": "message", "text": "COMET: [LORA] Initialized", "severity": 6}
+{"ts": 1785780134.2580342, "type": "message", "text": "COMET: [FLIGHT] Flight state initialized", "severity": 6}
+{"ts": 1785780134.2580342, "type": "message", "text": "COMET: [FLIGHT] Debug mode enabled", "severity": 4}
+{"ts": 1785780134.77007, "type": "message", "text": "COMET: [FLIGHT] Servo command state bypass enabled", "severity": 4}
+{"ts": 1785780134.77007, "type": "message", "text": "COMET: [FLIGHT] Automatic deploy transition enable", "severity": 6}
+{"ts": 1785780134.77007, "type": "message", "text": "d", "severity": 6}
+{"ts": 1785780134.77007, "type": "message", "text": "COMET: [SIK DEBUG] Disabled", "severity": 6}
+{"ts": 1785780134.77007, "type": "message", "text": "COMET: [MAIN] System initialized", "severity": 6}
+{"ts": 1785780134.77007, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DEPLOY"}
+{"ts": 1785780135.8488035, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785780137.4270692, "type": "message", "text": "COMET: [SENSOR] Baro pressure reference 101131.5 P", "severity": 6}
+{"ts": 1785780137.4270692, "type": "message", "text": "a, N=294", "severity": 6}
+{"ts": 1785780137.4270692, "type": "message", "text": "COMET: [FLIGHT] Accel sensor stable", "severity": 6}
+{"ts": 1785780137.4270692, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785780137.933496, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785780141.2017646, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785780141.2017646, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785780144.5057454, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 15.014078140258789, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": null}}
+{"ts": 1785780145.4545856, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785780151.5453804, "type": "message", "text": "EKF3 IMU0 origin set", "severity": 6}
+{"ts": 1785780151.5453804, "type": "message", "text": "Field Elevation Set: 18m", "severity": 6}
+{"ts": 1785780161.142289, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780175.2515779, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}

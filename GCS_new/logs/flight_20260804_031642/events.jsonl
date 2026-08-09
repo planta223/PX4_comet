@@ -1,0 +1,83 @@
+{"ts": 1785781002.2586877, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260804_031642", "trigger": "reboot"}
+{"ts": 1785781002.3484998, "type": "reboot_verify_servo_lock_sent", "channels": [16]}
+{"ts": 1785781005.8905497, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785781005.8915663, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785781007.8996403, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781012.9215693, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781017.2536721, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 15.007687330245972, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": null}}
+{"ts": 1785781017.939214, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781023.0050244, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781028.020509, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781033.0372062, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781037.5531373, "type": "message", "text": "COMET: [SENSOR] Sensor interface initialized", "severity": 6}
+{"ts": 1785781037.5531373, "type": "message", "text": "COMET: [SERVO] Servos initialized", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [LORA] Initialized", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [FLIGHT] Flight state initialized", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [FLIGHT] Debug mode enabled", "severity": 4}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [FLIGHT] Servo command state bypass enabled", "severity": 4}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [FLIGHT] Automatic deploy transition enable", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "d", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [SIK DEBUG] Disabled", "severity": 6}
+{"ts": 1785781037.5707357, "type": "message", "text": "COMET: [MAIN] System initialized", "severity": 6}
+{"ts": 1785781037.5707357, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DEPLOY"}
+{"ts": 1785781038.1043694, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1785781038.1043694, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785781039.1235178, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785781040.2291057, "type": "message", "text": "COMET: [SENSOR] Baro pressure reference 101156.3 P", "severity": 6}
+{"ts": 1785781040.2291057, "type": "message", "text": "a, N=294", "severity": 6}
+{"ts": 1785781040.2291057, "type": "message", "text": "COMET: [FLIGHT] Accel sensor stable", "severity": 6}
+{"ts": 1785781040.7374523, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785781040.7374523, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785781044.4614768, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785781044.4614768, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785781048.6034238, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785781050.231468, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785781051.11333, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785781053.261909, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781054.4216306, "type": "message", "text": "EKF3 IMU0 origin set", "severity": 6}
+{"ts": 1785781054.4216306, "type": "message", "text": "Field Elevation Set: 24m", "severity": 6}
+{"ts": 1785781054.5338585, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781060.1323595, "type": "servo_command", "channel": 16, "pwm_us": 2000, "path": "sik"}
+{"ts": 1785781069.3241987, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1785781069.3241987, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785781077.343277, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}
+{"ts": 1785781077.343277, "type": "message", "text": "AHRS: EKF3 active", "severity": 6}
+{"ts": 1785781100.2368, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1785781100.2368, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785781130.9297168, "type": "message", "text": "PreArm: Gyros not calibrated", "severity": 2}
+{"ts": 1785781130.9297168, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785781137.662737, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781139.622854, "type": "reboot_requested", "success": true}
+{"ts": 1785781139.9984803, "type": "reboot_verify_servo_lock_sent", "channels": [16]}
+{"ts": 1785781143.0225894, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1785781146.032264, "type": "message", "text": "SiK 링크 복귀", "severity": 6}
+{"ts": 1785781147.0375528, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785781147.0375528, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785781149.604158, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781152.6472268, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785781152.6472268, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785781152.6472268, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785781152.6472268, "type": "rocket_state_transition", "from_state": "DEPLOY", "to_state": "READY"}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [SENSOR] Sensor interface initialized", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [SERVO] Servos initialized", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [LORA] Initialized", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [FLIGHT] Flight state initialized", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [FLIGHT] Debug mode enabled", "severity": 4}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [FLIGHT] Servo command state bypass enabled", "severity": 4}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [FLIGHT] Automatic deploy transition enable", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "d", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [SIK DEBUG] Disabled", "severity": 6}
+{"ts": 1785781153.2154279, "type": "message", "text": "COMET: [MAIN] System initialized", "severity": 6}
+{"ts": 1785781153.2154279, "type": "rocket_state_transition", "from_state": "READY", "to_state": "DEPLOY"}
+{"ts": 1785781154.3553307, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785781154.644591, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 15.021737098693848, "checks": {"sik_link": true, "raw_imu": true, "attitude": true, "lora_link": null}}
+{"ts": 1785781155.9471948, "type": "message", "text": "COMET: [SENSOR] Baro pressure reference 101159.4 P", "severity": 6}
+{"ts": 1785781155.9471948, "type": "message", "text": "a, N=293", "severity": 6}
+{"ts": 1785781155.9471948, "type": "message", "text": "COMET: [FLIGHT] Accel sensor stable", "severity": 6}
+{"ts": 1785781155.9471948, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785781155.9471948, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785781160.2218692, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785781160.2218692, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785781161.9019554, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781164.0814695, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785781168.04936, "type": "reboot_requested", "success": true}

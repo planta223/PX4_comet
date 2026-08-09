@@ -1,0 +1,18 @@
+{"ts": 1785781230.9703543, "type": "flight_log_started", "flight_dir": "./logs\\flight_20260804_032030", "trigger": "reboot"}
+{"ts": 1785781231.223113, "type": "reboot_verify_servo_lock_sent", "channels": [16]}
+{"ts": 1785781234.2745984, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785781234.2745984, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785781236.8332121, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781241.3953135, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781243.1165807, "type": "reboot_requested", "success": true}
+{"ts": 1785781243.4125223, "type": "reboot_verify_servo_lock_sent", "channels": [16]}
+{"ts": 1785781244.95757, "type": "message", "text": "Calibrating barometer", "severity": 6}
+{"ts": 1785781246.4644935, "type": "message", "text": "Barometer 1 calibration complete", "severity": 6}
+{"ts": 1785781246.4644935, "type": "message", "text": "Beginning INS calibration. Do not move vehicle", "severity": 6}
+{"ts": 1785781248.9661243, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781250.557177, "type": "servo_command", "channel": 16, "pwm_us": 2000, "path": "sik"}
+{"ts": 1785781253.5460186, "type": "message", "text": "Initialising ArduPilot", "severity": 6}
+{"ts": 1785781255.208379, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781256.2629688, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781257.2334976, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785781258.1608045, "type": "reboot_verify_result", "passed": false, "elapsed_sec": 15.028587818145752, "checks": {"sik_link": true, "raw_imu": null, "attitude": null, "lora_link": null}}

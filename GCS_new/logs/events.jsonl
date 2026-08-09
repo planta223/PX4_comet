@@ -1,0 +1,107 @@
+{"ts": 1785774131.0355196, "type": "message", "text": "ArduPilot Ready", "severity": 6}
+{"ts": 1785774131.0435371, "type": "message", "text": "AHRS: DCM active", "severity": 6}
+{"ts": 1785774131.0435371, "type": "message", "text": "RCOut: PWM:1-16", "severity": 6}
+{"ts": 1785774131.0435371, "type": "altitude_source_transition", "from_source": null, "to_source": "sik_fallback", "altitude_m": 0.0011778474110550503}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [SENSOR] Sensor interface initialized", "severity": 6}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [SERVO] Servos initialized", "severity": 6}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [LORA] Initialized", "severity": 6}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [FLIGHT] Flight state initialized", "severity": 6}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [FLIGHT] Debug mode enabled", "severity": 4}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [FLIGHT] Servo command state bypass enabled", "severity": 4}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [FLIGHT] Automatic deploy transition disabl", "severity": 4}
+{"ts": 1785774131.5507698, "type": "message", "text": "ed", "severity": 4}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [SIK DEBUG] Disabled", "severity": 6}
+{"ts": 1785774131.5507698, "type": "message", "text": "COMET: [MAIN] System initialized", "severity": 6}
+{"ts": 1785774133.0806794, "type": "message", "text": "EKF3 IMU0 initialised", "severity": 6}
+{"ts": 1785774134.1507075, "type": "altitude_source_transition", "from_source": "sik_fallback", "to_source": "lora_baro", "altitude_m": 0.01}
+{"ts": 1785774134.596145, "type": "message", "text": "COMET: [SENSOR] Baro pressure reference 100969.5 P", "severity": 6}
+{"ts": 1785774134.596145, "type": "message", "text": "a, N=294", "severity": 6}
+{"ts": 1785774134.596145, "type": "message", "text": "COMET: [FLIGHT] Accel sensor stable", "severity": 6}
+{"ts": 1785774134.596145, "type": "message", "text": "EKF3 IMU0 tilt alignment complete", "severity": 6}
+{"ts": 1785774134.596145, "type": "message", "text": "EKF3 IMU0 MAG1 initial yaw alignment complete", "severity": 6}
+{"ts": 1785774138.1310203, "type": "message", "text": "GPS 1: probing for u-blox at 230400 baud", "severity": 6}
+{"ts": 1785774138.6318603, "type": "message", "text": "GPS 1: detected u-blox", "severity": 6}
+{"ts": 1785774142.1969457, "type": "message", "text": "u-blox 1 HW: 000A0000 SW: ROM SPG 5.10 (7b202e)", "severity": 6}
+{"ts": 1785774152.5164082, "type": "altitude_source_transition", "from_source": null, "to_source": "lora_baro", "altitude_m": 0.0}
+{"ts": 1785774171.6170557, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785774172.1975648, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774172.1975648, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774172.1982343, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774172.1982343, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774172.2297976, "type": "lora_command_result", "command_name": "RELEASE_ALL", "sequence": 0, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774173.905197, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785774175.9658666, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785774176.530478, "type": "lora_command_result", "command_name": "LOCK_ALL", "sequence": 1, "success": true, "result": "OK", "attempts": 2}
+{"ts": 1785774176.772089, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774176.772089, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774176.772089, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774176.772089, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774177.1369798, "type": "lora_command_result", "command_name": "LOCK_ALL", "sequence": 2, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774177.2800405, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774177.2800405, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774177.2800405, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774177.2800405, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774182.2003932, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785774182.6936212, "type": "lora_command_result", "command_name": "RELEASE_ALL", "sequence": 3, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774182.862544, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774182.862544, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774182.862544, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774182.862544, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774182.8769567, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785774184.1875339, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785774184.7270885, "type": "lora_command_result", "command_name": "LOCK_ALL", "sequence": 4, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774184.9142704, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774184.9142704, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774184.9142704, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774184.9142704, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774193.197568, "type": "servo_command", "channel": "all", "lora_command": "RELEASE_ALL", "path": "lora"}
+{"ts": 1785774193.7388723, "type": "lora_command_result", "command_name": "RELEASE_ALL", "sequence": 5, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774194.0789087, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774194.0929, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774194.0929, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774194.0929, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774194.6879778, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785774195.1557152, "type": "lora_command_result", "command_name": "LOCK_ALL", "sequence": 6, "success": true, "result": "OK", "attempts": 1}
+{"ts": 1785774195.631372, "type": "message", "text": "COMET: [LORA] Command CRC valid", "severity": 6}
+{"ts": 1785774195.631372, "type": "message", "text": "COMET: [LORA] RX bytes 4", "severity": 6}
+{"ts": 1785774195.631372, "type": "message", "text": "COMET: [FLIGHT] Remote command received", "severity": 6}
+{"ts": 1785774195.631372, "type": "message", "text": "COMET: [FLIGHT] Remote command succeeded", "severity": 6}
+{"ts": 1785774213.8071194, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785774245.1933687, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785774276.0407102, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785774306.9792821, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776620.6909525, "type": "altitude_source_transition", "from_source": null, "to_source": "sik_fallback", "altitude_m": -0.00546825745265445}
+{"ts": 1785776633.290313, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776664.059391, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776694.7906468, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776726.0373936, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776756.8736544, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776787.953977, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776818.8031895, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776850.067794, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776880.8314643, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776911.5996954, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785776941.3112695, "type": "message", "text": "SiK 링크 끊김 감지", "severity": 4}
+{"ts": 1785780015.0406675, "type": "altitude_source_transition", "from_source": null, "to_source": "sik_fallback", "altitude_m": -0.042383506834638845}
+{"ts": 1785780021.1741333, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780022.7071383, "type": "message", "text": "COMET: [FLIGHT] Launch detection started", "severity": 6}
+{"ts": 1785780022.7071383, "type": "message", "text": "COMET: [FLIGHT] Launch condition confirmed", "severity": 6}
+{"ts": 1785780022.7071383, "type": "message", "text": "COMET: [FLIGHT] READY -> ASCENT", "severity": 6}
+{"ts": 1785780022.7071383, "type": "message", "text": "COMET: [FLIGHT] Reason - acceleration confirmed", "severity": 6}
+{"ts": 1785780022.7071383, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785780322.873316, "type": "altitude_source_transition", "from_source": null, "to_source": "sik_fallback", "altitude_m": -0.0005392035452827706}
+{"ts": 1785780323.387265, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780335.788227, "type": "message", "text": "EKF3 IMU0 is using GPS", "severity": 6}
+{"ts": 1785780335.788227, "type": "message", "text": "AHRS: EKF3 active", "severity": 6}
+{"ts": 1785780353.221687, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780384.1204228, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785780402.463662, "type": "message", "text": "COMET: [FLIGHT] Launch detection started", "severity": 6}
+{"ts": 1785780402.463662, "type": "message", "text": "COMET: [FLIGHT] Launch condition confirmed", "severity": 6}
+{"ts": 1785780402.463662, "type": "message", "text": "COMET: [FLIGHT] READY -> ASCENT", "severity": 6}
+{"ts": 1785780402.463662, "type": "message", "text": "COMET: [FLIGHT] Reason - acceleration confirmed", "severity": 6}
+{"ts": 1785780402.463662, "type": "rocket_state_transition", "from_state": "READY", "to_state": "ASCENT"}
+{"ts": 1785780966.515865, "type": "altitude_source_transition", "from_source": null, "to_source": "sik_fallback", "altitude_m": -0.044283194620466836}
+{"ts": 1785780970.4283273, "type": "servo_command", "channel": "all", "lora_command": "LOCK_ALL", "path": "lora"}
+{"ts": 1785780973.0044456, "type": "servo_command", "channel": 16, "pwm_us": 1000, "path": "sik"}
+{"ts": 1785780976.2063098, "type": "message", "text": "PreArm: check steering and throttle config", "severity": 2}
+{"ts": 1785781002.2459848, "type": "reboot_requested", "success": true}

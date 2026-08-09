@@ -102,7 +102,7 @@ class _LinkWatcher:
                     self.last_lora_seen = item["last_seen"]
             if "command_result" in item:
                 result = item["command_result"]
-                if result["success"]:
+                if result["result"] is not None:
                     print(f"\n[LoRa 커맨드 결과] {result['command_name']} -> {result['result']} ({result['attempts']}회 시도)")
                 else:
                     print(f"\n[LoRa 커맨드 결과] {result['command_name']} 실패 - 응답 없음 ({result['attempts']}회 재시도)")
