@@ -1,8 +1,11 @@
-# Pixhawk4 Rocket Avionics Log Pipeline
+# Pixhawk4 Rocket Avionics
 
-Pixhawk 4와 ArduPilot Rover를 기반으로 로켓 에비오닉스의 센서 로그 저장, 실시간 텔레메트리 수신, 비행 후 로그 후처리 및 궤적 재구성을 수행하기 위한 프로젝트입니다.
+> **Date:** 2026-08-08<br>
+> **Competition:** 2026 전국대학생 로켓발사대회
 
-본 저장소는 Pixhawk SD 카드에서 생성된 ArduPilot DataFlash 로그(`.BIN`)를 분석하고, GPS/IMU/BARO/ATT 등 센서 데이터를 CSV로 추출한 뒤 궤적 재구성 프로그램의 입력 데이터로 정리하는 것을 1차 목표로 합니다.
+[![Competition Video](https://img.youtube.com/vi/SQCmV_QEpsk/hqdefault.jpg)](https://www.youtube.com/watch?v=SQCmV_QEpsk)
+
+Pixhawk 4와 ArduPilot Rover를 기반으로 로켓 에비오닉스의 낙하산 사출, 센서 로그 저장, 실시간 텔레메트리 수신, 비행 후 로그 후처리 및 궤적 재구성을 수행한 프로젝트입니다.
 
 ## 1. 프로젝트 목적
 
